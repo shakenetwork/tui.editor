@@ -37,9 +37,6 @@ Desktop.ini
 .project
 .metadata
 
-# build
-build
-
 # etc
 *.swp
 etc
