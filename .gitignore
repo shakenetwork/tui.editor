@@ -19,10 +19,6 @@ build/Release
 # Dependency directory
 node_modules
 
-# Bower Components
-bower_components
-lib
-
 # IDEA
 .idea
 *.iml
