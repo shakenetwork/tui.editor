@@ -50,7 +50,6 @@
     "commit": "e3982f95cc899605622f627d0f586ee3a9aa6217"
   },
   "_source": "https://github.com/nhnent/tui.editor.git",
-  "_target": "^0.7.1",
-  "_originalSource": "https://github.com/nhnent/tui.editor.git",
-  "_direct": true
+  "_target": "*",
+  "_originalSource": "https://github.com/nhnent/tui.editor.git"
 }

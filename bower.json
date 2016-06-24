@@ -1,11 +1,14 @@
 {
-  "name": "tui.editor.gh-pages",
-  "authors": [
-    "Sungho Kim <shirenbeat@gmail.com>"
-  ],
-  "description": "TUI Editor Demo Page",
-  "main": "index.html",
-  "license": "MIT",
-  "homepage": "nhnent.github.io/tui.editor",
-  "private": true
+    "name": "tui.editor github page",
+    "authors": [
+        "Sungho Kim <shirenbeat@gmail.com>"
+    ],
+    "description": "TUI Editor Demo Page",
+    "main": "index.html",
+    "license": "MIT",
+    "homepage": "nhnent.github.io/tui.editor",
+    "private": true,
+    "dependencies": {
+        "tui-editor": "https://github.com/nhnent/tui.editor.git"
+    }
 }
