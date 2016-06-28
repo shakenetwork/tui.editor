@@ -9,6 +9,6 @@
     "homepage": "nhnent.github.io/tui.editor",
     "private": true,
     "dependencies": {
-        "tui-editor": "https://github.com/nhnent/tui.editor.git"
+        "tui-editor": "https://github.com/nhnent/tui.editor.git#e07fa91"
     }
 }

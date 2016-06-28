@@ -12,7 +12,11 @@ And if you are in need, you can switch the editing mode (WYSIWYG ↔ Markdown) w
 * Auto-Scroll : A scroll automatically follows cursor position during editing so that you can see a Markdown preview in real time.
 * Text color : You can set the text color using inline html tag.
 
-## Image
+## DEMO
+
+You can try a demo at [nhnent.github.io/tui.editor](http://nhnent.github.io/tui.editor/)
+
+## Screenshots
 
 ### Markdown Mode
 ![Markdown Mode](https://cloud.githubusercontent.com/assets/389021/16108210/d55d4576-33dc-11e6-943a-66c29ae1ff4d.png)

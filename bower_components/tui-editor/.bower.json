@@ -1,6 +1,5 @@
 {
   "name": "tui-editor",
-  "version": "0.7.1",
   "description": "private",
   "authors": [
     {
@@ -43,13 +42,12 @@
     "jquery": "~2.1.3"
   },
   "homepage": "https://github.com/nhnent/tui.editor",
-  "_release": "0.7.1",
+  "_release": "e07fa91",
   "_resolution": {
-    "type": "version",
-    "tag": "0.7.1",
-    "commit": "e3982f95cc899605622f627d0f586ee3a9aa6217"
+    "type": "commit",
+    "commit": "e07fa91"
   },
   "_source": "https://github.com/nhnent/tui.editor.git",
-  "_target": "*",
+  "_target": "e07fa91",
   "_originalSource": "https://github.com/nhnent/tui.editor.git"
 }
