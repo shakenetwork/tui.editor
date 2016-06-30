@@ -29,8 +29,8 @@ You can try a demo at [nhnent.github.io/tui.editor](http://nhnent.github.io/tui.
 * **Getting Started** : https://github.com/nhnent/tui.editor/wiki/Getting-Started
 
 ## Dependency
-* squire #84ae8a0
 * codemirror ~1.0.4
+* squire #84ae8a0
 * jquery ~2.1.3
 * tui-code-snippet ~1.0.4
 * highlightjs ~9.1.0
@@ -52,4 +52,3 @@ You can try a demo at [nhnent.github.io/tui.editor](http://nhnent.github.io/tui.
 
 ## License
 This software is licensed under the [MIT License](https://github.com/nhnent/tui.editor/blob/master/LICENSE).
-

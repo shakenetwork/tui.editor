@@ -172,13 +172,13 @@ WysiwygEditor.prototype._initSquireEvent = function() {
         });
     });
 
-    this.getEditor().getDocument().addEventListener('dragover', function(ev) {
+    this.getEditor().addEventListener('dragover', function(ev) {
         ev.preventDefault();
 
         return false;
     });
 
-    this.getEditor().getDocument().addEventListener('drop', function(ev) {
+    this.getEditor().addEventListener('drop', function(ev) {
         ev.preventDefault();
 
         self.eventManager.emit('drop', {
@@ -570,8 +570,6 @@ WysiwygEditor.prototype.focus = function() {
  * Remove wysiwyg editor
  */
 WysiwygEditor.prototype.remove = function() {
-    this.getEditor().getDocument().removeEventListener('dragover', false);
-    this.getEditor().getDocument().removeEventListener('drop', false);
     this.getEditor().destroy();
 
     this.editor = null;
@@ -614,7 +612,7 @@ WysiwygEditor.prototype.setValue = function(html) {
     this.getEditor().preserveLastLine();
 
     this.getEditor().removeLastUndoStack();
-    this.getEditor().recordUndoState();
+    this.getEditor().saveUndoState();
 };
 
 /**
