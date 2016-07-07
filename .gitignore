@@ -48,3 +48,4 @@ karma.conf.local.js
 .tern-port
 *.vim
 .\#*
+lib/
