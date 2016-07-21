@@ -6,6 +6,7 @@
 'use strict';
 
 var domUtils = require('./domUtils');
+var htmlSanitizer = require('./htmlSanitizer');
 
 var util = tui.util;
 
@@ -30,9 +31,11 @@ WwPasteContentHelper.prototype.preparePaste = function(pasteData) {
     var range = this.wwe.getEditor().getSelection().cloneRange();
     var newFragment = this.wwe.getEditor().getDocument().createDocumentFragment();
     var firstBlockIsTaken = false;
-    var nodeName, node, childNodes;
+    var codeblockManager = this.wwe.getManager('codeblock');
+    var tableManager = this.wwe.getManager('table');
+    var nodeName, node, childNodes, isPastingList;
 
-    this._pasteFirstAid(pasteData.fragment);
+    pasteData.fragment = this._pasteFirstAid(pasteData.fragment);
 
     childNodes = util.toArray(pasteData.fragment.childNodes);
 
@@ -46,10 +49,14 @@ WwPasteContentHelper.prototype.preparePaste = function(pasteData) {
     while (childNodes.length) {
         node = childNodes[0];
         nodeName = domUtils.getNodeName(node);
+        isPastingList = nodeName === 'LI' || nodeName === 'UL' || nodeName === 'OL';
 
-        if (this.wwe.getManager('codeblock').isInCodeBlock(range)) {
-            newFragment.appendChild(this.wwe.getManager('codeblock').prepareToPasteOnCodeblock(childNodes));
-        } else if (nodeName === 'LI' || nodeName === 'UL' || nodeName === 'OL') {
+        if (codeblockManager.isInCodeBlock(range)) {
+            newFragment.appendChild(codeblockManager.prepareToPasteOnCodeblock(childNodes));
+        } else if (tableManager.isInTable(range)) {
+            newFragment = tableManager.prepareToPasteOnTable(pasteData, node);
+            childNodes.shift();
+        } else if (isPastingList) {
             newFragment.appendChild(this._prepareToPasteList(childNodes, pasteData.rangeInfo, firstBlockIsTaken));
             //첫번째 현재위치와 병합될 가능성이있는 컨텐츠가 만들어진경우는 이후 위치에 대한 정보가 필요없다
             firstBlockIsTaken = true;
@@ -88,12 +95,13 @@ WwPasteContentHelper.prototype._wrapTextNodeWithDiv = function(fragment) {
  * Processing paste data after paste
  * @param {DocumentFragment} fragment Pasting data
  * @memberOf WwPasteContentHelper
+ * @returns {DocumentFragment}
  * @private
  */
 WwPasteContentHelper.prototype._pasteFirstAid = function(fragment) {
     var self = this;
 
-    $(fragment).find('iframe, script, select, form, button, .Apple-converted-space').remove();
+    fragment = htmlSanitizer(fragment);
 
     this._removeUnnecessaryBlocks(fragment);
     this._removeStyles(fragment);
@@ -102,12 +110,16 @@ WwPasteContentHelper.prototype._pasteFirstAid = function(fragment) {
 
     this._preElementAid(fragment);
 
+    this._tableElementAid(fragment);
+
     //br은 preElemnetAid에서 필요해서 처리후 불필요한 br은 삭제한다.
     $(fragment).find('br').remove();
 
     $(fragment).find('*').each(function() {
         self._removeStyles(this);
     });
+
+    return fragment;
 };
 
 /**
@@ -327,6 +339,27 @@ WwPasteContentHelper.prototype._makeNodeAndAppend = function(pathInfo, content) 
     }
 
     return node[0];
+};
+
+/**
+ * Pasting table element pre-process
+ * @param {DocumentFragment} fragment pasteData's fragment
+ * @memberOf WwPasteContentHelper
+ * @private
+ */
+WwPasteContentHelper.prototype._tableElementAid = function(fragment) {
+    var tableManager = this.wwe.getManager('table');
+    var wrapperTable = tableManager.wrapTheadAndTbodyIntoTableIfNeed(fragment);
+    var wrapperTr = tableManager.wrapDanglingTableCellsIntoTrIfNeed(fragment);
+    var wrapperTbody = tableManager.wrapTrsIntoTbodyIfNeed(fragment);
+
+    if (wrapperTr) {
+        $(fragment).append(wrapperTr);
+    } else if (wrapperTbody) {
+        $(fragment).append(wrapperTbody);
+    } else if (wrapperTable) {
+        $(fragment).append(wrapperTable);
+    }
 };
 
 module.exports = WwPasteContentHelper;

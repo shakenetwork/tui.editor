@@ -1,6 +1,7 @@
 /**
  * @fileoverview Implements wysiwyg table manager
- * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
+ * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Lab/NHN Ent.
+ * @author Junghwan Park(junghwan.park@nhnent.com) FE Development Lab/NHN Ent.
  */
 
 'use strict';
@@ -52,6 +53,7 @@ WwTableManager.prototype._initEvent = function() {
 
     this.eventManager.listen('wysiwygRangeChangeAfter', function() {
         self._unwrapBlockInTable();
+        self.wwe.defer(self._completeTableIfNeed.bind(self));
     });
 
     this.eventManager.listen('wysiwygSetValueAfter', function() {
@@ -61,6 +63,16 @@ WwTableManager.prototype._initEvent = function() {
     this.eventManager.listen('wysiwygProcessHTMLText', function(html) {
         //remove last br in td or th
         return html.replace(/<br \/>(<\/td>|<\/th>)/g, '$1');
+    });
+
+    this.wwe.getEditor().addEventListener('paste', function(ev) {
+        var range = self.wwe.getEditor().getSelection();
+        var isNotPastingIntoTextNode = !domUtils.isTextNode(range.commonAncestorContainer);
+
+        if (self.isInTable(range) && !range.collapsed && isNotPastingIntoTextNode) {
+            ev.preventDefault();
+        }
+        self.wwe.defer(self._completeTableIfNeed.bind(self));
     });
 };
 
@@ -74,7 +86,7 @@ WwTableManager.prototype._initKeyHandler = function() {
     var self = this;
 
     this.wwe.addKeyEventHandler(function(ev, range) {
-        if (self._isInTable(range)) {
+        if (self.isInTable(range)) {
             self._recordUndoStateIfNeed(range);
         } else if (self._lastCellNode) {
             self._recordUndoStateAndResetCellNode(range);
@@ -93,7 +105,7 @@ WwTableManager.prototype._initKeyHandler = function() {
             ev.preventDefault();
             self.wwe.breakToNewDefaultBlock(range, 'before');
             isNeedNext = false;
-        } else if (self._isInTable(range)) {
+        } else if (self.isInTable(range)) {
             self._appendBrIfTdOrThNotHaveAsLastChild(range);
             isNeedNext = false;
         }
@@ -105,12 +117,22 @@ WwTableManager.prototype._initKeyHandler = function() {
         var isNeedNext;
 
         if (range.collapsed) {
-            if (self._isInTable(range)) {
+            if (self.isInTable(range)) {
                 self._tableHandlerOnBackspace(range, ev);
                 isNeedNext = false;
             } else if (self._isAfterTable(range)) {
                 ev.preventDefault();
                 self._removeTableOnBackspace(range);
+                isNeedNext = false;
+            }
+        } else if (self.isInTable(range)) {
+            if (range.commonAncestorContainer.nodeType !== 3
+                && range.commonAncestorContainer !== self.wwe.get$Body()[0]
+            ) {
+                ev.preventDefault();
+                self._removeTableContents(range);
+                range.collapse(true);
+                self.wwe.getEditor().setSelection(range);
                 isNeedNext = false;
             }
         }
@@ -120,23 +142,25 @@ WwTableManager.prototype._initKeyHandler = function() {
 };
 
 /**
- * _isInTable
+ * isInTable
  * Check whether passed range is in table or not
  * @param {Range} range range
  * @returns {boolean} result
  * @memberOf WwTableManager
- * @private
+ * @api
  */
-WwTableManager.prototype._isInTable = function(range) {
-    var target;
+WwTableManager.prototype.isInTable = function(range) {
+    var target, result;
 
     if (range.collapsed) {
         target = range.startContainer;
+        result = !!$(target).closest('table').length;
     } else {
         target = range.commonAncestorContainer;
+        result = !!$(target).closest('table').length || !!$(range.cloneContents()).find('table').length;
     }
 
-    return !!$(target).closest('table').length;
+    return result;
 };
 
 /**
@@ -268,4 +292,388 @@ WwTableManager.prototype._recordUndoStateAndResetCellNode = function(range) {
     this._lastCellNode = null;
 };
 
+/**
+ * Paste table data into table element
+ * @param {DocumentFragment} fragment Fragment of table element within
+ * @memberOf WwTableManager
+ * @api
+ */
+WwTableManager.prototype.pasteDataIntoTable = function(fragment) {
+    var range = this.wwe.getEditor().getSelection();
+    var tableData = this._getTableDataFromTable(fragment);
+    var startContainer = range.startContainer;
+    var parentNode = startContainer.parentNode;
+    var isTextInTableCell = parentNode.tagName === 'TD' || parentNode.tagName === 'TH';
+    var isTableCell = startContainer.tagName === 'TD' || startContainer.tagName === 'TH';
+    var isTextNode = startContainer.nodeType === 3;
+    var anchorElement, td, tr;
+
+    if (isTextNode && isTextInTableCell) {
+        anchorElement = parentNode;
+    } else if (isTableCell) {
+        anchorElement = startContainer;
+    } else {
+        anchorElement = $(startContainer).find('th,td')[0];
+    }
+
+    td = anchorElement;
+
+    while (tableData.length) {
+        tr = tableData.shift();
+
+        while (td && tr.length) {
+            td.textContent = tr.shift();
+
+            td = domUtils.nextTableCell(td);
+        }
+
+        td = domUtils.nextLineTableCell(anchorElement);
+        anchorElement = td;
+    }
+};
+
+/**
+ * Get array data from table element
+ * @param {DocumentFragment} fragment table element
+ * @returns {Array}
+ * @private
+ */
+WwTableManager.prototype._getTableDataFromTable = function(fragment) {
+    var $fragment = $(fragment);
+    var tableData = [];
+    var trs = $fragment.find('tr');
+
+    trs.each(function(i, tr) {
+        var trData = [];
+        var tds = $(tr).children();
+
+        tds.each(function(index, cell) {
+            trData.push(cell.textContent);
+        });
+
+        tableData.push(trData);
+    });
+
+    return tableData;
+};
+/**
+ * Remove selected table contents
+ * @param {Range} range Range object
+ * @private
+ */
+WwTableManager.prototype._removeTableContents = function(range) {
+    var anchorCell = range.startContainer;
+    var cellLength = $(range.cloneContents()).find('th,td').length;
+    var index = 0;
+    var cell, nextCell, nextLineFirstCell;
+    if (domUtils.isTextNode(anchorCell)) {
+        anchorCell = anchorCell.parentNode;
+    }
+    cell = anchorCell;
+
+    this.wwe.getEditor().saveUndoState();
+    for (;index < cellLength; index += 1) {
+        cell.innerHTML = '<br>';
+
+        nextCell = domUtils.nextTableCell(cell);
+        nextLineFirstCell = domUtils.nextLineTableCell(cell, true);
+
+        if (nextCell) {
+            cell = nextCell;
+        } else if (nextLineFirstCell) {
+            cell = nextLineFirstCell;
+        } else {
+            cell = null;
+        }
+    }
+};
+
+/**
+ * Wrap dangling table cells with new TR
+ * @param {DocumentFragment} fragment Pasting data
+ * @returns {HTMLElement|null}
+ */
+WwTableManager.prototype.wrapDanglingTableCellsIntoTrIfNeed = function(fragment) {
+    var danglingTableCells = $(fragment).children('td,th');
+    var $wrapperTr, tr;
+
+    if (danglingTableCells.length) {
+        $wrapperTr = $('<tr></tr>');
+
+        danglingTableCells.each(function(i, cell) {
+            $wrapperTr.append(cell);
+        });
+
+        tr = $wrapperTr[0];
+    }
+
+    return tr;
+};
+
+/**
+ * Wrap TRs with new TBODY
+ * @param {DocumentFragment} fragment Pasting data
+ * @returns {HTMLElement|null}
+ */
+WwTableManager.prototype.wrapTrsIntoTbodyIfNeed = function(fragment) {
+    var danglingTrs = $(fragment).children('tr');
+    var ths = danglingTrs.find('th');
+    var $wrapperTableBody, tbody;
+
+    if (ths.length) {
+        ths.each(function(i, node) {
+            var $node = $(node);
+            var td = $('<td></td>');
+
+            td.html($node.html());
+            td.insertBefore(node);
+
+            $node.detach();
+        });
+    }
+
+    if (danglingTrs.length) {
+        $wrapperTableBody = $('<tbody></tbody>');
+
+        danglingTrs.each(function(i, tr) {
+            $wrapperTableBody.append(tr);
+        });
+
+        tbody = $wrapperTableBody[0];
+    }
+
+    return tbody;
+};
+
+/**
+ * Wrap THEAD followed by TBODY both into Table
+ * @param {DocumentFragment} fragment Pasting data
+ * @returns {HTMLElement|null}
+ */
+WwTableManager.prototype.wrapTheadAndTbodyIntoTableIfNeed = function(fragment) {
+    var danglingThead = $(fragment).children('thead');
+    var danglingTbody = $(fragment).children('tbody');
+    var $wrapperTable, table;
+
+    if (danglingTbody.length && danglingThead.length) {
+        $wrapperTable = $('<table></table>');
+        $wrapperTable.append(danglingThead);
+        $wrapperTable.append(danglingTbody);
+        table = $wrapperTable[0];
+    }
+
+    return table;
+};
+/**
+ * Prepare to paste data on table
+ * @param {object} pasteData Pasting data
+ * @param {HTMLElement} node Current pasting element
+ * @returns {DocumentFragment}
+ * @memberOf WwTableManager
+ * @api
+ */
+WwTableManager.prototype.prepareToPasteOnTable = function(pasteData, node) {
+    var newFragment = document.createDocumentFragment();
+    if (this.isTableOrSubTableElement(node.nodeName)) {
+        this.pasteDataIntoTable(pasteData.fragment);
+        pasteData.fragment = newFragment;
+    } else {
+        newFragment.textContent = newFragment.textContent + pasteData.fragment.textContent;
+    }
+
+    return newFragment;
+};
+
+/**
+ * Whether pasting element is table element
+ * @param {string} pastingNodeName Pasting node name
+ * @returns {boolean}
+ * @memberOf WwTableManager
+ * @api
+ */
+WwTableManager.prototype.isTableOrSubTableElement = function(pastingNodeName) {
+    return pastingNodeName === 'TABLE' || pastingNodeName === 'TBODY'
+        || pastingNodeName === 'THEAD' || pastingNodeName === 'TR' || pastingNodeName === 'TD';
+};
+
+/**
+ * Generate table cell HTML text
+ * @param {number} amount Amount of cells
+ * @param {string} tagName Tag name of cell 'td' or 'th'
+ * @private
+ * @returns {string}
+ */
+function tableCellGenerator(amount, tagName) {
+    var i;
+    var tdString = '';
+    for (i = 0; i < amount; i += 1) {
+        tdString = tdString + '<' + tagName + '><br></' + tagName + '>';
+    }
+
+    return tdString;
+}
+
+WwTableManager.prototype._stuffTableCellsIntoIncompleteRow = function($trs, maximumCellLength) {
+    $trs.each(function(rowIndex, row) {
+        var $row = $(row);
+        var tableCells = $row.find('th,td');
+        var cellLength = tableCells.length;
+        var parentNodeName = domUtils.getNodeName($row.parent()[0]);
+        var cellTagName = parentNodeName === 'THEAD' ? 'th' : 'td';
+
+        for (; cellLength < maximumCellLength; cellLength += 1) {
+            $row.append($(tableCellGenerator(1, cellTagName))[0]);
+        }
+    });
+};
+
+WwTableManager.prototype._prepareToTableCellStuffing = function($trs) {
+    var maximumCellLength = $trs.eq(0).find('th,td').length;
+    var needTableCellStuffingAid = false;
+
+    $trs.each(function(i, row) {
+        var cellCount = $(row).find('th,td').length;
+
+        if (maximumCellLength !== cellCount) {
+            needTableCellStuffingAid = true;
+
+            if (maximumCellLength < cellCount) {
+                maximumCellLength = cellCount;
+            }
+        }
+    });
+
+    return {
+        maximumCellLength: maximumCellLength,
+        needTableCellStuffingAid: needTableCellStuffingAid
+    };
+};
+
+WwTableManager.prototype._addTbodyOrTheadIfNeed = function(table) {
+    var isTheadNotExists = !table.find('thead').length;
+    var isTbodyNotExists = !table.find('tbody').length;
+    var absentNode, cellTagName;
+
+    if (isTheadNotExists) {
+        cellTagName = 'th';
+    } else if (isTbodyNotExists) {
+        cellTagName = 'td';
+    }
+
+    if (cellTagName) {
+        absentNode = $('<' + cellTagName + '><tr></tr></' + cellTagName + '>')[0];
+        table.prepend(absentNode);
+    }
+};
+
+WwTableManager.prototype._tableCellAppendAidForTableElement = function(node) {
+    var table = $(node);
+    var needTableCellStuffingAid = false;
+    var tableAidInformation = null;
+    var trs, maximumCellLength;
+
+    this._addTbodyOrTheadIfNeed(table);
+
+    trs = table.find('tr');
+    tableAidInformation = this._prepareToTableCellStuffing(trs);
+    maximumCellLength = tableAidInformation.maximumCellLength;
+    needTableCellStuffingAid = tableAidInformation.needTableCellStuffingAid;
+
+    if (needTableCellStuffingAid) {
+        this._stuffTableCellsIntoIncompleteRow(trs, maximumCellLength);
+    }
+};
+
+WwTableManager.prototype._generateTheadAndTbodyFromTbody = function(node) {
+    var tr = $('<tr></tr>');
+    var thead = $('<thead></thead>');
+
+    tr.append(tableCellGenerator($(node).find('tr').eq(0).find('td').length, 'th'));
+    thead.append(tr);
+
+    return {
+        thead: thead[0],
+        tbody: node
+    };
+};
+
+WwTableManager.prototype._generateTheadAndTbodyFromThead = function(node) {
+    var tr = $('<tr></tr>');
+    var tbody = $('<tbody></tbody>');
+
+    tr.append(tableCellGenerator($(node).find('th').length, 'td'));
+    tbody.append(tr);
+
+    return {
+        thead: node,
+        tbody: tbody[0]
+    };
+};
+
+WwTableManager.prototype._generateTheadAndTbodyFromTr = function(node) {
+    var $node = $(node);
+    var thead = $('<thead></thead>');
+    var tbody = $('<tbody></tbody>');
+    var theadRow, tbodyRow;
+
+    if ($node.children()[0].tagName === 'TH') {
+        theadRow = node;
+        tbodyRow = tableCellGenerator($node.find('th').length, 'td');
+    } else {
+        theadRow = tableCellGenerator($node.find('td').length, 'th');
+        tbodyRow = node;
+    }
+
+    thead.append(theadRow);
+    tbody.append(tbodyRow);
+
+    return {
+        thead: thead[0],
+        tbody: tbody[0]
+    };
+};
+
+/**
+ * Complete passed table
+ * @param {HTMLElement} node Table inner element
+ * @private
+ */
+WwTableManager.prototype._completeIncompleteTable = function(node) {
+    var nodeName = node.tagName;
+    var table, completedTableContents;
+
+    if (nodeName === 'TABLE') {
+        this._tableCellAppendAidForTableElement(node);
+    } else {
+        table = $('<table></table>');
+        table.insertAfter(node);
+
+        if (nodeName === 'TBODY') {
+            completedTableContents = this._generateTheadAndTbodyFromTbody(node);
+        } else if (nodeName === 'THEAD') {
+            completedTableContents = this._generateTheadAndTbodyFromThead(node);
+        } else if (nodeName === 'TR') {
+            completedTableContents = this._generateTheadAndTbodyFromTr(node);
+        }
+
+        table.append(completedTableContents.thead);
+        table.append(completedTableContents.tbody);
+    }
+};
+
+/**
+ * Whole editor body searching incomplete table completion
+ * @private
+ */
+WwTableManager.prototype._completeTableIfNeed = function() {
+    var $body = this.wwe.getEditor().get$Body();
+    var self = this;
+
+    $body.children().each(function(index, node) {
+        if (!self.isTableOrSubTableElement(node.nodeName)) {
+            return;
+        }
+        self._completeIncompleteTable(node);
+    });
+};
 module.exports = WwTableManager;

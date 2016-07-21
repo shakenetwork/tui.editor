@@ -11,6 +11,7 @@ var domUtils = require('./domUtils'),
     WwListManager = require('./wwListManager'),
     WwTaskManager = require('./wwTaskManager'),
     WwTableManager = require('./wwTableManager'),
+    WwTableSelectionManager = require('./wwTableSelectionManager'),
     WwHrManager = require('./wwHrManager'),
     WwPManager = require('./wwPManager'),
     WwHeadingManager = require('./wwHeadingManager'),
@@ -386,7 +387,15 @@ WysiwygEditor.prototype._onKeyDown = function(keyboardEvent) {
 WysiwygEditor.prototype._initDefaultKeyEventHandler = function() {
     var self = this;
 
-    this.addKeyEventHandler('ENTER', function() {
+    this.addKeyEventHandler('ENTER', function(ev, range) {
+        if (self._isInOrphanText(range)) {
+            //We need this cuz input text right after table make orphan text in webkit
+            self.defer(function() {
+                self._wrapDefaultBlockToOrphanTexts();
+                self.breakToNewDefaultBlock(range, 'before');
+            });
+        }
+
         self.defer(function() {
             self._scrollToRangeIfNeed();
         });
@@ -404,6 +413,20 @@ WysiwygEditor.prototype._initDefaultKeyEventHandler = function() {
         }
 
         return true;
+    });
+};
+
+WysiwygEditor.prototype._wrapDefaultBlockToOrphanTexts = function() {
+    var textNodes;
+
+    textNodes = this.get$Body().contents().filter(findTextNodeFilter);
+
+    textNodes.each(function(i, node) {
+        if (node.nextSibling && node.nextSibling.tagName === 'BR') {
+            $(node.nextSibling).remove();
+        }
+
+        $(node).wrap('<div />');
     });
 };
 
@@ -985,22 +1008,24 @@ WysiwygEditor.prototype.scrollTop = function(value) {
  */
 WysiwygEditor.prototype._correctRangeAfterMoveCursor = function(direction) {
     var range = this.getEditor().getSelection().cloneRange();
-    var cursorContainer, offset;
+    var cursorContainer = this.get$Body()[0];
 
     if (direction === 'start') {
-        cursorContainer = this.get$Body()[0].firstChild;
-        offset = 0;
+        while (cursorContainer.firstChild) {
+            cursorContainer = cursorContainer.firstChild;
+        }
     } else {
-        cursorContainer = this.get$Body()[0].lastChild;
-        offset = domUtils.getOffsetLength(cursorContainer);
-
-        // IE have problem with cursor after br
-        if (domUtils.getNodeName(cursorContainer.lastChild) === 'BR') {
-            offset -= 1;
+        while (cursorContainer.lastChild) {
+            cursorContainer = cursorContainer.lastChild;
         }
     }
 
-    range.setStart(cursorContainer, offset);
+    // IE have problem with cursor after br
+    if (cursorContainer.tagName === 'BR') {
+        range.setStartBefore(cursorContainer);
+    } else {
+        range.setStartAfter(cursorContainer);
+    }
 
     range.collapse(true);
 
@@ -1058,6 +1083,7 @@ WysiwygEditor.factory = function($el, eventManager) {
     wwe.addManager(WwListManager);
     wwe.addManager(WwTaskManager);
     wwe.addManager(WwTableManager);
+    wwe.addManager(WwTableSelectionManager);
     wwe.addManager(WwHrManager);
     wwe.addManager(WwPManager);
     wwe.addManager(WwHeadingManager);

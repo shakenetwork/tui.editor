@@ -1,6 +1,5 @@
 {
   "name": "tui-code-snippet",
-  "version": "1.0.4",
   "authors": [
     "NHN Ent. FE dev team(dl_javascript@nhnent.com)"
   ],
@@ -23,17 +22,17 @@
     "tutorial"
   ],
   "devDependencies": {
-    "json2": "*",
     "jquery": "~1.8.3"
   },
   "homepage": "https://github.com/nhnent/tui.code-snippet",
-  "_release": "1.0.4",
+  "version": "1.2.0",
+  "_release": "1.2.0",
   "_resolution": {
     "type": "version",
-    "tag": "1.0.4",
-    "commit": "9bbd441e6dd44dccf2ab5e980e769314ded94b96"
+    "tag": "1.2.0",
+    "commit": "f3eb6efc29149db5e2f54b284dc4a6b95ee4f80d"
   },
   "_source": "https://github.com/nhnent/tui.code-snippet.git",
-  "_target": "1.0.4",
+  "_target": "~1.2.0",
   "_originalSource": "tui-code-snippet"
 }

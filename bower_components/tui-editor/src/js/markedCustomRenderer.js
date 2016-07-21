@@ -31,19 +31,17 @@ var regexTaskList = /^((?:<p>|))(\[(?:x| )\]) /i;
 markedCustomRenderer.listitem = function(text) {
     var cap,
         checked,
-        className = '',
-        output = '';
+        className = '';
 
     cap = regexTaskList.exec(text);
 
     if (cap) {
         text = text.substring(cap[0].length);
-        className = ' class="task-list-item"';
         checked = cap[2].toLowerCase() === '[x]' ? ' checked' : '';
-        output += cap[1] + '<input type="checkbox" class="task-list-item-checkbox"' + checked + '> ';
+        className = ' class="task-list-item' + checked + '"';
     }
 
-    return '<li' + className + '>' + output + text + '</li>\n';
+    return '<li data-te-task' + className + '>' + text + '</li>\n';
 };
 
 /**
@@ -80,6 +78,24 @@ markedCustomRenderer.code = function(code, lang, escaped) {
 };
 
 /**
+ * Render table cell
+ * @param {string} content Text content
+ * @param {{align: string, header: boolean}} flags Flag object
+ * @returns {string}
+ */
+markedCustomRenderer.tablecell = function(content, flags) {
+    var type = flags.header ? 'th' : 'td';
+    var $element = $('<' + type + '></' + type + '>');
+
+    if (flags.align) {
+        $element.attr('align', flags.align);
+    }
+    $element.html(content);
+
+    return $element[0].outerHTML + '\n';
+};
+
+/**
  * Render table
  * @api
  * @memberOf markedCustomRenderer
@@ -89,12 +105,8 @@ markedCustomRenderer.code = function(code, lang, escaped) {
  */
 markedCustomRenderer.table = function(header, body) {
     var cellLen = header.match(/\/th/g).length;
-    var foundLastTr = body.match(/\n?<tr>[\s\S]*?<\/tr>\n$/g);
-    var lastTr;
-
-    if (foundLastTr && foundLastTr.length) {
-        lastTr = foundLastTr[0];
-    }
+    var trs = body.match(/<tr>[\s\S]*?<\/tr>/g);
+    var lastTr = trs[trs.length - 1];
 
     if (lastTr && lastTr.match(/\/td/g).length < cellLen) {
         body = body.replace(/<\/td>\n<\/tr>\n$/g, '</td>\n<td></td>\n</tr>\n');

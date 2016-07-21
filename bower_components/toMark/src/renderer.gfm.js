@@ -28,23 +28,18 @@ var gfmRenderer = Renderer.factory(basicRenderer, {
             language = ' ' + node.getAttribute('data-language');
         }
 
-        subContent = subContent.replace(/\n/g, this.lineFeedReplacement);
+        subContent = subContent.replace(/(\r\n)|(\r)|(\n)/g, this.lineFeedReplacement);
 
         return '\n\n```' + language + '\n' + subContent + '\n```\n\n';
     },
     'PRE': function(node, subContent) {
         return subContent;
     },
-    'LI INPUT': function(node) {
-        var condition;
-
-        if (node.type !== 'checkbox') {
-            return;
-        }
-
-        condition = node.checked ? 'x' : ' ';
-
-        return '[' + condition + '] ';
+    'UL LI': function(node, subContent) {
+        return basicRenderer.convert(node, makeTaskIfNeed(node, subContent));
+    },
+    'OL LI': function(node, subContent) {
+        return basicRenderer.convert(node, makeTaskIfNeed(node, subContent));
     },
 
     //Table
@@ -77,6 +72,17 @@ var gfmRenderer = Renderer.factory(basicRenderer, {
         return subContent ? (subContent + '|' + result + '\n') : '';
     }
 });
+
+function makeTaskIfNeed(node, subContent) {
+    var condition;
+
+    if (subContent && node.className.indexOf('task-list-item') !== -1) {
+        condition = node.className.indexOf('checked') !== -1 ? 'x' : ' ';
+        subContent = '[' + condition + '] ' + subContent;
+    }
+
+    return subContent;
+}
 
 function makeTableHeadAlignText(th) {
     var align, leftAlignValue, rightAlignValue, textLength;
