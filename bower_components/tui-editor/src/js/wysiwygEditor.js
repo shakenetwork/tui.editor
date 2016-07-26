@@ -403,10 +403,12 @@ WysiwygEditor.prototype._initDefaultKeyEventHandler = function() {
 
     this.addKeyEventHandler('TAB', function(ev) {
         var editor = self.getEditor();
-        var isAbleToInsert4Space = !self.getManager('list').isInList();
+        var range = editor.getSelection();
+        var isNotListOrBlockquote = range.collapsed && !editor.hasFormat('li') && !editor.hasFormat('blockquote');
+        var isTextSelection = !range.collapsed && domUtils.isTextNode(range.commonAncestorContainer);
 
-        if (isAbleToInsert4Space) {
-            ev.preventDefault();
+        ev.preventDefault();
+        if (isNotListOrBlockquote || isTextSelection) {
             editor.insertPlainText('\u00a0\u00a0\u00a0\u00a0');
 
             return false;
@@ -1082,8 +1084,8 @@ WysiwygEditor.factory = function($el, eventManager) {
 
     wwe.addManager(WwListManager);
     wwe.addManager(WwTaskManager);
-    wwe.addManager(WwTableManager);
     wwe.addManager(WwTableSelectionManager);
+    wwe.addManager(WwTableManager);
     wwe.addManager(WwHrManager);
     wwe.addManager(WwPManager);
     wwe.addManager(WwHeadingManager);
