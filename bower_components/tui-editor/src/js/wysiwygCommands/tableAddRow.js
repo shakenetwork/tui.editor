@@ -25,13 +25,13 @@ var AddRow = CommandManager.command('wysiwyg', /** @lends AddRow */{
             range = sq.getSelection().cloneRange(),
             $tr, $newRow;
 
+        sq.focus();
+
         if (sq.hasFormat('TD')) {
             sq.saveUndoState(range);
             $tr = $(range.startContainer).closest('tr');
             $newRow = getNewRow($tr);
             $newRow.insertAfter($tr);
-
-            sq.focus();
 
             focusToFirstTd(sq, $newRow);
         } else if (sq.hasFormat('TH')) {
@@ -40,19 +40,16 @@ var AddRow = CommandManager.command('wysiwyg', /** @lends AddRow */{
             $newRow = getNewRow($tr);
             $newRow.insertBefore($tr);
 
-            sq.focus();
-
             focusToFirstTd(sq, $newRow);
-        } else {
-            sq.focus();
         }
     }
 });
 
 function getNewRow($tr) {
     var cloned = $tr.clone();
+    var htmlString = tui.util.browser.msie ? '' : '<br />';
 
-    cloned.find('td').html('<br>');
+    cloned.find('td').html(htmlString);
 
     return cloned;
 }

@@ -73,7 +73,10 @@ WysiwygEditor.prototype.init = function() {
     this.$editorContainerEl.append($editorBody);
 
     this.editor = new SquireExt($editorBody[0], {
-        blockTag: 'DIV'
+        blockTag: 'DIV',
+        leafNodeNames: {
+            'HR': false
+        }
     });
 
     this._initSquireEvent();
@@ -105,10 +108,6 @@ WysiwygEditor.prototype._initEvent = function() {
 
     this.eventManager.listen('wysiwygSetValueBefore', function(html) {
         return self._preprocessForInlineElement(html);
-    });
-
-    this.eventManager.listen('wysiwygSetValueAfter', function() {
-        self._wrapDefaultBlockToListInner();
     });
 
     this.eventManager.listen('wysiwygKeyEvent', function(ev) {
@@ -176,7 +175,7 @@ WysiwygEditor.prototype._initSquireEvent = function() {
     var self = this;
     var isNeedFirePostProcessForRangeChange = false;
 
-    this.getEditor().addEventListener('paste', function(clipboardEvent) {
+    this.getEditor().addEventListener(util.browser.msie ? 'beforepaste' : 'paste', function(clipboardEvent) {
         self.eventManager.emit('paste', {
             source: 'wysiwyg',
             data: clipboardEvent
@@ -315,6 +314,13 @@ WysiwygEditor.prototype._initSquireEvent = function() {
         });
     });
 
+    this.getEditor().addEventListener('mouseover', function(ev) {
+        self.eventManager.emit('mouseover', {
+            source: 'wysiwyg',
+            data: ev
+        });
+    });
+
     this.getEditor().addEventListener('mouseup', function(ev) {
         self.eventManager.emit('mouseup', {
             source: 'wysiwyg',
@@ -342,13 +348,11 @@ WysiwygEditor.prototype._initSquireEvent = function() {
     });
 
     this.getEditor().addEventListener('pathChange', function(data) {
-        var isInPreTag = /PRE/.test(data.path);
-        var isInCodeTag = />CODE$/.test(data.path);
         var state = {
-            bold: /(>B)|(>STRONG)/.test(data.path),
-            italic: /(>I)|(>EM)/.test(data.path),
-            code: !isInPreTag && isInCodeTag,
-            codeBlock: isInPreTag && isInCodeTag,
+            bold: /(>B|>STRONG|^B$|^STRONG$)/.test(data.path),
+            italic: /(>I|>EM|^I$|^EM$)/.test(data.path),
+            code: /CODE/.test(data.path),
+            codeBlock: /PRE/.test(data.path),
             source: 'wysiwyg'
         };
 
@@ -402,14 +406,14 @@ WysiwygEditor.prototype._initDefaultKeyEventHandler = function() {
     });
 
     this.addKeyEventHandler('TAB', function(ev) {
-        var editor = self.getEditor();
-        var range = editor.getSelection();
-        var isNotListOrBlockquote = range.collapsed && !editor.hasFormat('li') && !editor.hasFormat('blockquote');
+        var sq = self.getEditor();
+        var range = sq.getSelection();
+        var isAbleToInput4Spaces = range.collapsed && self._isCursorNotInRestrictedAreaOfTabAction(sq);
         var isTextSelection = !range.collapsed && domUtils.isTextNode(range.commonAncestorContainer);
 
         ev.preventDefault();
-        if (isNotListOrBlockquote || isTextSelection) {
-            editor.insertPlainText('\u00a0\u00a0\u00a0\u00a0');
+        if (isAbleToInput4Spaces || isTextSelection) {
+            sq.insertPlainText('\u00a0\u00a0\u00a0\u00a0');
 
             return false;
         }
@@ -561,19 +565,6 @@ WysiwygEditor.prototype.saveSelection = function(range) {
 WysiwygEditor.prototype.restoreSavedSelection = function() {
     var sq = this.getEditor();
     sq.setSelection(sq._getRangeAndRemoveBookmark());
-};
-
-/**
- * _wrapDefaultBlockToListInner
- * Wrap default block to list inner contents
- * @private
- */
-WysiwygEditor.prototype._wrapDefaultBlockToListInner = function() {
-    this.get$Body().find('li').each(function(index, node) {
-        if ($(node).find('div').length <= 0) {
-            $(node).wrapInner('<div />');
-        }
-    });
 };
 
 /**
@@ -1055,18 +1046,24 @@ WysiwygEditor.prototype.getTextObject = function(range) {
     return new WwTextObject(this, range);
 };
 
-WysiwygEditor.prototype.defer = function(callback) {
+WysiwygEditor.prototype.defer = function(callback, delayOffset) {
     var self = this;
+    var delay = delayOffset ? delayOffset : 0;
 
     setTimeout(function() {
         if (self.isEditorValid()) {
             callback(self);
         }
-    }, 0);
+    }, delay);
 };
 
 WysiwygEditor.prototype.isEditorValid = function() {
     return this.getEditor() && $.contains(this.$editorContainerEl[0].ownerDocument, this.$editorContainerEl[0]);
+};
+
+WysiwygEditor.prototype._isCursorNotInRestrictedAreaOfTabAction = function(editor) {
+    return !editor.hasFormat('li')
+        && !editor.hasFormat('blockquote') && !editor.hasFormat('table');
 };
 
 /**

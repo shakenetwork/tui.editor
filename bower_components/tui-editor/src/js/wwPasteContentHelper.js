@@ -61,7 +61,7 @@ WwPasteContentHelper.prototype.preparePaste = function(pasteData) {
             //첫번째 현재위치와 병합될 가능성이있는 컨텐츠가 만들어진경우는 이후 위치에 대한 정보가 필요없다
             firstBlockIsTaken = true;
         } else {
-            $(newFragment).append(childNodes.shift());
+            newFragment.appendChild(childNodes.shift());
         }
     }
 
@@ -193,13 +193,17 @@ WwPasteContentHelper.prototype._removeStyles = function(node) {
     if (domUtils.getNodeName($node[0]) !== 'SPAN') {
         $node.removeAttr('style');
     } else {
-        colorValue = $node.css('color');
+        //Most browser return computed color value even if without style attribute
+        if ($node.attr('style')) {
+            colorValue = $node.css('color');
+        }
+
         $node.removeAttr('style');
 
         if (colorValue) {
             $node.css('color', colorValue);
         } else {
-            $node.children().unwrap();
+            $node.contents().unwrap();
         }
     }
 };
@@ -349,15 +353,19 @@ WwPasteContentHelper.prototype._makeNodeAndAppend = function(pathInfo, content) 
  */
 WwPasteContentHelper.prototype._tableElementAid = function(fragment) {
     var tableManager = this.wwe.getManager('table');
-    var wrapperTable = tableManager.wrapTheadAndTbodyIntoTableIfNeed(fragment);
     var wrapperTr = tableManager.wrapDanglingTableCellsIntoTrIfNeed(fragment);
-    var wrapperTbody = tableManager.wrapTrsIntoTbodyIfNeed(fragment);
+    var wrapperTbody, wrapperTable;
 
     if (wrapperTr) {
         $(fragment).append(wrapperTr);
-    } else if (wrapperTbody) {
+    }
+    wrapperTbody = tableManager.wrapTrsIntoTbodyIfNeed(fragment);
+    if (wrapperTbody) {
         $(fragment).append(wrapperTbody);
-    } else if (wrapperTable) {
+    }
+    wrapperTable = tableManager.wrapTheadAndTbodyIntoTableIfNeed(fragment);
+    if (wrapperTable) {
+        $(wrapperTable).addClass(tableManager.getTableIDClassName());
         $(fragment).append(wrapperTable);
     }
 };

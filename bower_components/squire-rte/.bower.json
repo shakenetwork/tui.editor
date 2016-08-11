@@ -21,12 +21,12 @@
     "test",
     "tests"
   ],
-  "_release": "84ae8a0",
+  "_release": "f8764e1",
   "_resolution": {
     "type": "commit",
-    "commit": "84ae8a0"
+    "commit": "f8764e1"
   },
-  "_source": "https://github.com/neilj/Squire.git",
-  "_target": "84ae8a0",
-  "_originalSource": "squire-rte"
+  "_source": "https://github.com/nhnent/Squire.git",
+  "_target": "f8764e1",
+  "_originalSource": "https://github.com/nhnent/Squire.git"
 }

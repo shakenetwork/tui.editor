@@ -56,6 +56,15 @@ WwListManager.prototype._initEvent = function() {
 
     this.eventManager.listen('wysiwygSetValueAfter', function() {
         self._removeBranchListAll();
+        self._wrapDefaultBlockToListInner();
+    });
+
+    this.eventManager.listen('wysiwygProcessHTMLText', function(html) {
+        return self._prepareInsertBlankToBetweenSameList(html);
+    });
+
+    this.eventManager.listen('convertorAfterHtmlToMarkdownConverted', function(markdown) {
+        return markdown.replace(/:BLANK_LINE:\n/g, '');
     });
 };
 
@@ -146,6 +155,23 @@ WwListManager.prototype._removeBranchList = function(list) {
     $branchRoot.prepend($list.children().unwrap());
 
     $firstLi.remove();
+};
+
+/**
+ * _wrapDefaultBlockToListInner
+ * Wrap default block to list inner contents
+ * @private
+ */
+WwListManager.prototype._wrapDefaultBlockToListInner = function() {
+    this.wwe.get$Body().find('li').each(function(index, node) {
+        if ($(node).children('div, p').length <= 0) {
+            $(node).wrapInner('<div />');
+        }
+    });
+};
+
+WwListManager.prototype._prepareInsertBlankToBetweenSameList = function(html) {
+    return html.replace(/<\/(ul|ol)>(<br \/>|<br>){0,}<\1>/g, '</$1>:BLANK_LINE:<$1>');
 };
 
 module.exports = WwListManager;

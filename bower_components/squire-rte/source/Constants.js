@@ -13,6 +13,11 @@ var START_TO_END = 1;   // Range.START_TO_END
 var END_TO_END = 2;     // Range.END_TO_END
 var END_TO_START = 3;   // Range.END_TO_START
 
+var HIGHLIGHT_CLASS = 'highlight';
+var COLOUR_CLASS = 'colour';
+var FONT_FAMILY_CLASS = 'font';
+var FONT_SIZE_CLASS = 'size';
+
 var ZWS = '\u200B';
 
 var win = doc.defaultView;
@@ -22,11 +27,14 @@ var ua = navigator.userAgent;
 var isIOS = /iP(?:ad|hone|od)/.test( ua );
 var isMac = /Mac OS X/.test( ua );
 
+var isAndroid = /Android/.test( ua );
+
 var isGecko = /Gecko\//.test( ua );
 var isIElt11 = /Trident\/[456]\./.test( ua );
 var isPresto = !!win.opera;
 var isEdge = /Edge\//.test( ua );
 var isWebKit = !isEdge && /WebKit\//.test( ua );
+var isIE = /Trident\/[4567]\./.test( ua );
 
 var ctrlKey = isMac ? 'meta-' : 'ctrl-';
 

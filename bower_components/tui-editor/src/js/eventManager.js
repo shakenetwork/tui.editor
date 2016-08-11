@@ -10,6 +10,7 @@ var util = tui.util;
 var eventList = [
     'previewBeforeHook',
     'previewRenderAfter',
+    'previewNeedsRefresh',
     'addImageBlobHook',
     'setValueAfter',
     'contentChangedFromWysiwyg',
@@ -45,6 +46,7 @@ var eventList = [
     'scroll',
     'click',
     'mousedown',
+    'mouseover',
     'mouseup',
     'contextmenu',
     'keydown',
@@ -55,6 +57,7 @@ var eventList = [
     'blur',
     'paste',
     'copy',
+    'cut',
     'drop',
     'show',
     'hide'
