@@ -19,7 +19,7 @@ var block = {
   nptable: noop,
   lheading: /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,
   blockquote: /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,
-  list: /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
+  list: /^( *)(bull) [\s\S]+?(?:fences|hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
   html: /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,
   def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,
   table: noop,
@@ -35,6 +35,7 @@ block.item = replace(block.item, 'gm')
 
 block.list = replace(block.list)
   (/bull/g, block.bullet)
+  ('fences', '\\n+(?=\\1?(?:[`]{3,}))')
   ('hr', '\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))')
   ('def', '\\n+(?=' + block.def.source + ')')
   ();
@@ -464,7 +465,7 @@ var inline = {
 };
 
 inline._inside = /(?:\[[^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*/;
-inline._href = /\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;
+inline._href = /\s*<?([\s\S]*)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;
 
 inline.link = replace(inline.link)
   ('inside', inline._inside)

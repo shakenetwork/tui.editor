@@ -3,7 +3,6 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
-'use strict';
 
 var keyMapper = require('./keyMapper').getSharedInstance();
 var MdTextObject = require('./mdTextObject');
@@ -171,6 +170,9 @@ MarkdownEditor.prototype._initEvent = function() {
             italic: !!base.em,
             code: !!overlay.code,
             codeBlock: !!overlay.codeBlock,
+            quote: !!base.quote,
+            list: !!base.list,
+            task: !!base.task,
             source: 'markdown'
         };
 

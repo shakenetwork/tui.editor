@@ -3,7 +3,6 @@
  * @author Junghwan Park(junghwan.pakr@nhnent.com) FE Development Team/NHN Ent.
  */
 
-'use strict';
 
 var FIND_LI_ELEMENT = /<li/i;
 
@@ -52,6 +51,7 @@ WwListManager.prototype._initEvent = function() {
     this.eventManager.listen('wysiwygRangeChangeAfter', function() {
         self._findAndRemoveEmptyList();
         self._removeBranchListAll();
+        self._wrapDefaultBlockToListInner();
     });
 
     this.eventManager.listen('wysiwygSetValueAfter', function() {
@@ -67,7 +67,6 @@ WwListManager.prototype._initEvent = function() {
         return markdown.replace(/:BLANK_LINE:\n/g, '');
     });
 };
-
 
 WwListManager.prototype._initKeyHandler = function() {
     var self = this;
@@ -130,7 +129,7 @@ WwListManager.prototype._removeBranchListAll = function() {
     var self = this;
 
     self.wwe.get$Body().find('li ul, li ol').each(function() {
-        if (!this || $(this).prev().length) {
+        if (!this || this.previousSibling) {
             return;
         }
         self._removeBranchList(this);
@@ -146,7 +145,7 @@ WwListManager.prototype._removeBranchList = function(list) {
     var $branchRoot = $list;
     var $firstLi;
 
-    while (!$branchRoot.prev().length) {
+    while (!$branchRoot[0].previousSibling) {
         $branchRoot = $branchRoot.parent();
     }
 
@@ -165,7 +164,8 @@ WwListManager.prototype._removeBranchList = function(list) {
 WwListManager.prototype._wrapDefaultBlockToListInner = function() {
     this.wwe.get$Body().find('li').each(function(index, node) {
         if ($(node).children('div, p').length <= 0) {
-            $(node).wrapInner('<div />');
+            $(this).wrapInner('<div />');
+            $(this).find('div').children('ul, ol').appendTo(this);
         }
     });
 };

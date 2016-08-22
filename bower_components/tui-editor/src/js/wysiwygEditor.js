@@ -3,7 +3,6 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
-'use strict';
 
 var domUtils = require('./domUtils'),
     WwClipboardManager = require('./wwClipboardManager'),
@@ -353,6 +352,9 @@ WysiwygEditor.prototype._initSquireEvent = function() {
             italic: /(>I|>EM|^I$|^EM$)/.test(data.path),
             code: /CODE/.test(data.path),
             codeBlock: /PRE/.test(data.path),
+            quote: /BLOCKQUOTE/.test(data.path),
+            list: /LI/.test(data.path),
+            task: /LI.task-list-item/.test(data.path),
             source: 'wysiwyg'
         };
 
@@ -537,7 +539,6 @@ WysiwygEditor.prototype._joinSplitedTextNodes = function() {
 
     $(nodesToRemove).remove();
 };
-
 
 /**
  * saveSelection
@@ -869,7 +870,6 @@ WysiwygEditor.prototype.breakToNewDefaultBlock = function(range, where) {
     range.collapse(true);
     this.editor.setSelection(range);
 };
-
 
 /**
  * replaceContentText

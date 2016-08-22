@@ -4,7 +4,6 @@
  * @author Junghwan Park(junghwan.park@nhnent.com) FE Development Lab/NHN Ent.
  */
 
-'use strict';
 
 var domUtils = require('./domUtils');
 var isIE10 = tui.util.browser.msie && tui.util.browser.version === 10;
@@ -109,7 +108,7 @@ WwTableManager.prototype._initKeyHandler = function() {
         }
 
         if (!self._isModifierKeyPushed(ev)) {
-            self.wwe.defer(function() {
+            self.wwe.getEditor().modifyDocument(function() {
                 selectionManager.removeClassAttrbuteFromAllCellsIfNeed();
             });
         }
@@ -147,14 +146,6 @@ WwTableManager.prototype._initKeyHandler = function() {
 
     this.wwe.addKeyEventHandler('SHIFT+TAB', function(ev) {
         return self._moveCursorTo('previous', 'cell', ev);
-    });
-
-    this.wwe.addKeyEventHandler('DOWN', function(ev) {
-        return self._moveCursorTo('next', 'row', ev);
-    });
-
-    this.wwe.addKeyEventHandler('UP', function(ev) {
-        return self._moveCursorTo('previous', 'row', ev);
     });
 
     this._bindKeyEventForTableCopyAndCut();
@@ -918,7 +909,6 @@ WwTableManager.prototype._getColumnAndRowDifference = function(fragment, range) 
     var tableColumnLength = $table.find('tr').eq(0).children().length;
     var tableRowLength = $table.find('tr').length;
     var isInTbody = $currentRow.parents('tbody').length;
-
 
     if (isInTbody) {
         currentRowIndex += 1;

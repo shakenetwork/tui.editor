@@ -20,12 +20,12 @@
     "test",
     "tests"
   ],
-  "_release": "949307524a",
+  "_release": "97f0365cba",
   "_resolution": {
     "type": "commit",
-    "commit": "949307524ab4dab71ebd4b840b6b41fd06741deb"
+    "commit": "97f0365cba039e1821cb139d870f498fb6b80650"
   },
   "_source": "https://github.com/nhnent/marked.git",
-  "_target": "949307524ab4dab71ebd4b840b6b41fd06741deb",
+  "_target": "97f0365cba039e1821cb139d870f498fb6b80650",
   "_originalSource": "https://github.com/nhnent/marked.git"
 }
