@@ -21,12 +21,12 @@
     "test",
     "tests"
   ],
-  "_release": "f8764e1",
+  "_release": "61c3df3dfc",
   "_resolution": {
     "type": "commit",
-    "commit": "f8764e1"
+    "commit": "61c3df3dfc509487a9247e944c8373198d216882"
   },
   "_source": "https://github.com/nhnent/Squire.git",
-  "_target": "f8764e1",
+  "_target": "61c3df3dfc509487a9247e944c8373198d216882",
   "_originalSource": "https://github.com/nhnent/Squire.git"
 }
