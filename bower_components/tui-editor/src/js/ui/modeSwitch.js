@@ -3,12 +3,12 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
+import UIController from './uicontroller';
+import i18n from '../i18n';
 
-var UIController = require('./uicontroller');
+const util = tui.util;
 
-var util = tui.util;
-
-var TYPE = {
+const TYPE = {
     MARKDOWN: 'markdown',
     WYSIWYG: 'wysiwyg'
 };
@@ -39,8 +39,10 @@ ModeSwitch.prototype = util.extend(
 
 ModeSwitch.prototype._render = function() {
     this.$buttons = {};
-    this.$buttons.markdown = $('<button class="te-switch-button markdown" type="button">Markdown</button>');
-    this.$buttons.wysiwyg = $('<button class="te-switch-button wysiwyg" type="button">WYSIWYG</button>');
+    this.$buttons.markdown
+        = $(`<button class="te-switch-button markdown" type="button">${i18n.get('Markdown')}</button>`);
+    this.$buttons.wysiwyg
+        = $(`<button class="te-switch-button wysiwyg" type="button">${i18n.get('WYSIWYG')}</button>`);
     this.$el.append(this.$buttons.markdown);
     this.$el.append(this.$buttons.wysiwyg);
 
@@ -59,7 +61,7 @@ ModeSwitch.prototype._changeWysiwyg = function() {
 };
 
 ModeSwitch.prototype._setActiveButton = function(type) {
-    util.forEach(this.$buttons, function($button) {
+    util.forEach(this.$buttons, $button => {
         $button.removeClass('active');
     });
     this.$buttons[type].addClass('active');

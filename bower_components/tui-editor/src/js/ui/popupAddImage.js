@@ -3,31 +3,11 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
+import LayerPopup from './layerpopup';
+import Tab from './tab';
+import i18n from '../i18n';
 
-var LayerPopup = require('./layerpopup'),
-    Tab = require('./tab');
-
-var util = tui.util;
-
-/* eslint-disable indent */
-var POPUP_CONTENT = [
-    '<div class="te-tab-section"></div>',
-    '<div class="te-url-type">',
-        '<label for="">이미지 URL</label>',
-        '<input type="text" class="te-image-url-input" />',
-    '</div>',
-    '<form enctype="multipart/form-data" class="te-file-type">',
-        '<label for="">이미지 선택</label>',
-        '<input type="file" class="te-image-file-input" accept="image/*" />',
-    '</form>',
-    '<label for="url">설명</label>',
-    '<input type="text" class="te-alt-text-input" />',
-    '<div class="te-button-section">',
-        '<button type="button" class="te-ok-button">삽입</button>',
-        '<button type="button" class="te-close-button">취소</button>',
-    '</div>'
-].join('');
-/* eslint-enable indent */
+const util = tui.util;
 
 /**
  * PopupAddImage
@@ -39,8 +19,28 @@ var POPUP_CONTENT = [
  * @param {object} options options
  */
 function PopupAddImage(options) {
+    /* eslint-disable indent */
+    const POPUP_CONTENT = [
+        '<div class="te-tab-section"></div>',
+        '<div class="te-url-type">',
+            `<label for="">${i18n.get('Image URL')}</label>`,
+            '<input type="text" class="te-image-url-input" />',
+        '</div>',
+        '<form enctype="multipart/form-data" class="te-file-type">',
+            `<label for="">${i18n.get('Select image file')}</label>`,
+            '<input type="file" class="te-image-file-input" accept="image/*" />',
+        '</form>',
+        `<label for="url">${i18n.get('Description')}</label>`,
+        '<input type="text" class="te-alt-text-input" />',
+        '<div class="te-button-section">',
+            `<button type="button" class="te-ok-button">${i18n.get('OK')}</button>`,
+            `<button type="button" class="te-close-button">${i18n.get('Cancel')}</button>`,
+        '</div>'
+    ].join('');
+    /* eslint-enable indent */
+
     options = util.extend({
-        title: '이미지 삽입',
+        title: i18n.get('Insert image'),
         className: 'te-popup-add-image tui-editor-popup',
         content: POPUP_CONTENT
     }, options);
@@ -62,53 +62,53 @@ PopupAddImage.prototype = util.extend(
 );
 
 PopupAddImage.prototype._bindContentEvent = function() {
-    var self = this;
+    const self = this;
 
-    this.on('click .te-ok-button', function() {
+    this.on('click .te-ok-button', () => {
         self.trigger('okButtonClicked', self);
         self.hide();
     });
 
-    this.on('click .te-close-button', function() {
+    this.on('click .te-close-button', () => {
         self.trigger('closeButtonClicked', self);
         self.hide();
     });
 
-    this.on('shown', function() {
+    this.on('shown', () => {
         self.$el.find('.te-image-url-input').focus();
     });
 
-    this.on('hidden', function() {
+    this.on('hidden', () => {
         self.resetInputs();
     });
 
-    this.tab.on('itemClick', function() {
+    this.tab.on('itemClick', () => {
         self.resetInputs();
     });
 
-    this.on('change .te-image-file-input', function() {
-        var filename = self.$el.find('.te-image-file-input').val().split('\\').pop();
+    this.on('change .te-image-file-input', () => {
+        const filename = self.$el.find('.te-image-file-input').val().split('\\').pop();
         self.$el.find('.te-alt-text-input').val(filename);
     });
 };
 
 PopupAddImage.prototype._linkWithEventManager = function() {
-    var self = this;
+    const self = this;
 
-    this.eventManager.listen('focus', function() {
+    this.eventManager.listen('focus', () => {
         self.hide();
     });
 
-    this.eventManager.listen('openPopupAddImage', function() {
+    this.eventManager.listen('openPopupAddImage', () => {
         self.eventManager.emit('closeAllPopup');
         self.show();
     });
 
-    this.eventManager.listen('closeAllPopup', function() {
+    this.eventManager.listen('closeAllPopup', () => {
         self.hide();
     });
 
-    this.on('okButtonClicked', function() {
+    this.on('okButtonClicked', () => {
         if (self._isUrlType()) {
             self.applyImage();
         } else {
@@ -121,10 +121,10 @@ PopupAddImage.prototype._linkWithEventManager = function() {
 };
 
 PopupAddImage.prototype._initApplyImageBindContext = function() {
-    var self = this;
+    const self = this;
 
     this.applyImage = function(url) {
-        var info;
+        let info;
 
         if (url) {
             info = self._getImageInfoWithGivenUrl(url);
@@ -146,13 +146,13 @@ PopupAddImage.prototype._isUrlType = function() {
  * @override
  */
 PopupAddImage.prototype._renderContent = function() {
-    var $popup = this.$el;
+    const $popup = this.$el;
 
     LayerPopup.prototype._renderContent.call(this);
 
     this.tab = new Tab({
-        initName: 'File',
-        items: ['File', 'URL'],
+        initName: i18n.get('File'),
+        items: [i18n.get('File'), i18n.get('URL')],
         sections: [$popup.find('.te-file-type'), $popup.find('.te-url-type')]
     });
 
@@ -160,13 +160,14 @@ PopupAddImage.prototype._renderContent = function() {
 };
 
 PopupAddImage.prototype._getImageInfoWithGivenUrl = function(imageUrl) {
-    var altText = this._preAltValue;
+    const altText = this._preAltValue;
     this._preAltValue = '';
+
     return this._makeImageInfo(imageUrl, altText);
 };
 
 PopupAddImage.prototype._getImageInfo = function() {
-    var imageUrl = this.$el.find('.te-image-url-input').val(),
+    const imageUrl = this.$el.find('.te-image-url-input').val(),
         altText = this.$el.find('.te-alt-text-input').val();
 
     return this._makeImageInfo(imageUrl, altText);

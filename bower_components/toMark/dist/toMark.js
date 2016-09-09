@@ -649,7 +649,7 @@
 	    //find space more than one
 	    FIND_SPACE_MORE_THAN_ONE_RX = /[\u0020]+/g,
 	    //find characters that need escape
-	    FIND_CHAR_TO_ESCAPE_RX = /[\>\(\)\*\{\}\[\]\_\`\+\-\.\`\!#|]/g;
+	    FIND_CHAR_TO_ESCAPE_RX = /[~>()*{}\[\]_`+-.!#|]/g;
 
 	var TEXT_NODE = 3;
 
@@ -944,18 +944,21 @@
 
 	Renderer.markdownTextToEscapeRx = {
 	    codeblock: /(^ {4}[^\n]+\n*)+/,
-	    hr: /(^ *[-*_]){3,} */,
+	    hr: /^ *((\* *){3,}|(- *){3,} *|(_ *){3,}) */,
 	    heading: /^(#{1,6}) +[\s\S]+/,
 	    lheading: /^([^\n]+)\n *(=|-){2,} */,
 	    blockquote: /^( *>[^\n]+.*)+/,
-	    list: /^ *(\*+|\d+\.) [\s\S]+/,
+	    list: /^ *(\*+|-+|\d+\.) [\s\S]+/,
 	    def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? */,
 
 	    link: /!?\[.*\]\(.*\)/,
 	    reflink: /!?\[.*\]\s*\[([^\]]*)\]/,
 	    strong: /__(\S[\s\S]*\h)__|\*\*(\S[\s\S]*\S)\*\*/,
 	    em: /_(\S[\s\S]*\S)_|\*(\S[\s\S]*\S)\*/,
+	    strikeThrough: /~~(\S[\s\S]*\S)~~/,
 	    code: /(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/,
+
+	    verticalBar: /\u007C/,
 
 	    codeblockGfm: /^(`{3,})/
 	};
@@ -1108,7 +1111,7 @@
 	function makeTaskIfNeed(node, subContent) {
 	    var condition;
 
-	    if (subContent && node.className.indexOf('task-list-item') !== -1) {
+	    if (node.className.indexOf('task-list-item') !== -1) {
 	        condition = node.className.indexOf('checked') !== -1 ? 'x' : ' ';
 	        subContent = '[' + condition + '] ' + subContent;
 	    }

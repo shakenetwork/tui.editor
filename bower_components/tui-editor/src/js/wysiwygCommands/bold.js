@@ -1,10 +1,12 @@
 /**
  * @fileoverview Implements WysiwygCommand
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
+ * @author Junghwan Park(junghwan.park@nhnent.com) FE Development Team/NHN Ent.
  */
 
 
-var CommandManager = require('../commandManager');
+import CommandManager from '../commandManager';
+import domUtils from '../domUtils';
 
 /**
  * Bold
@@ -13,17 +15,22 @@ var CommandManager = require('../commandManager');
  * @augments Command
  * @augments WysiwygCommand
  */
-var Bold = CommandManager.command('wysiwyg', /** @lends Bold */{
+const Bold = CommandManager.command('wysiwyg', /** @lends Bold */{
     name: 'Bold',
     keyMap: ['CTRL+B', 'META+B'],
     /**
      *  커맨드 핸들러
      *  @param {WysiwygEditor} wwe WYsiwygEditor instance
      */
-    exec: function(wwe) {
-        var sq = wwe.getEditor();
+    exec(wwe) {
+        const sq = wwe.getEditor();
+        const tableSelectionManager = wwe.getManager('tableSelection');
 
         sq.focus();
+
+        if (sq.hasFormat('table') && tableSelectionManager.getSelectedCells().length) {
+            tableSelectionManager.createRangeBySelectedCells();
+        }
 
         if (sq.hasFormat('b') || sq.hasFormat('strong')) {
             sq.changeFormat(null, {tag: 'b'});
@@ -32,6 +39,12 @@ var Bold = CommandManager.command('wysiwyg', /** @lends Bold */{
                 sq.changeFormat(null, {tag: 'code'});
             }
             sq.bold();
+        }
+
+        const range = sq.getSelection();
+        if (sq.hasFormat('table') && !domUtils.isTextNode(range.commonAncestorContainer)) {
+            range.collapse(true);
+            sq.setSelection(range);
         }
     }
 });

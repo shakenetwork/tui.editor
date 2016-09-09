@@ -4,13 +4,38 @@
  */
 
 
-var htmlSanitizer = require('./htmlSanitizer');
+import htmlSanitizer from './htmlSanitizer';
+import taskList from './markdownItPlugins/markdownitTaskPlugin';
+import codeBlock from './markdownItPlugins/markdownitCodeBlockPlugin';
+import tableRenderer from './markdownItPlugins/markdownitTableRenderer';
 
-var markedCustomRenderer = require('./markedCustomRenderer');
-
-var marked = window.marked,
+const markdownIt = window.markdownit,
     toMark = window.toMark,
     hljs = window.hljs;
+
+const markdownitHighlight = markdownIt({
+    html: true,
+    breaks: true,
+    quotes: '“”‘’',
+    langPrefix: 'lang-',
+    highlight(code, type) {
+        return hljs.getLanguage(type) ? hljs.highlight(type, code).value : escape(code, false);
+    }
+});
+const markdownit = markdownIt({
+    html: true,
+    breaks: true,
+    quotes: '“”‘’',
+    langPrefix: 'lang-'
+});
+
+markdownitHighlight.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
+markdownitHighlight.use(taskList);
+markdownitHighlight.use(codeBlock);
+
+markdownit.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
+markdownit.use(taskList);
+markdownit.use(codeBlock);
 
 /**
  * Convertor
@@ -19,117 +44,112 @@ var marked = window.marked,
  * @class Convertor
  * @param {EventManager} em EventManager instance
  */
-function Convertor(em) {
-    this.eventManager = em;
+class Convertor {
+    constructor(em) {
+        this.eventManager = em;
+    }
+
+    /**
+     * _markdownToHtmlWithCodeHighlight
+     * Convert markdown to html with Codehighlight
+     * @private
+     * @memberOf Convertor
+     * @param {string} markdown markdown text
+     * @returns {string} html text
+     */
+    _markdownToHtmlWithCodeHighlight(markdown) {
+        return markdownitHighlight.render(markdown);
+    }
+
+    /**
+     * _markdownToHtml
+     * Convert markdown to html
+     * @private
+     * @memberOf Convertor
+     * @param {string} markdown markdown text
+     * @returns {string} html text
+     */
+    _markdownToHtml(markdown) {
+        return markdownit.render(markdown);
+    }
+
+    /**
+     * toHTMLWithCodeHightlight
+     * Convert markdown to html with Codehighlight
+     * emit convertorAfterMarkdownToHtmlConverted
+     * @api
+     * @memberOf Convertor
+     * @param {string} markdown markdown text
+     * @returns {string} html text
+     */
+    toHTMLWithCodeHightlight(markdown) {
+        let html = this._markdownToHtmlWithCodeHighlight(markdown);
+        html = this.eventManager.emitReduce('convertorAfterMarkdownToHtmlConverted', html);
+
+        return htmlSanitizer(html, true);
+    }
+
+    /**
+     * toHTML
+     * Convert markdown to html
+     * emit convertorAfterMarkdownToHtmlConverted
+     * @api
+     * @memberOf Convertor
+     * @param {string} markdown markdown text
+     * @returns {string} html text
+     */
+    toHTML(markdown) {
+        let html = this._markdownToHtml(markdown);
+        html = this.eventManager.emitReduce('convertorAfterMarkdownToHtmlConverted', html);
+
+        return htmlSanitizer(html, true);
+    }
+
+    /**
+     * toMarkdown
+     * Convert html to markdown
+     * emit convertorAfterHtmlToMarkdownConverted
+     * @api
+     * @memberOf Convertor
+     * @param {string} html html text
+     * @returns {string} markdown text
+     */
+    toMarkdown(html) {
+        let markdown = toMark(html);
+        markdown = this.eventManager.emitReduce('convertorAfterHtmlToMarkdownConverted', markdown);
+
+        return markdown;
+    }
+
+    /**
+     * factory
+     * Convertor factory
+     * @api
+     * @memberOf Convertor
+     * @param {EventManager} eventManager eventmanager
+     * @returns {Convertor}
+     */
+    static factory(eventManager) {
+        return new Convertor(eventManager);
+    }
+
+    /**
+     * Return markdown-it highlight renderer
+     * @returns {markdownIt}
+     */
+    static getMarkdownHighlightRenderer() {
+        return markdownitHighlight;
+    }
 }
 
 /**
- * _markdownToHtmlWithCodeHighlight
- * Convert markdown to html with Codehighlight
- * @private
- * @memberOf Convertor
- * @param {string} markdown markdown text
- * @returns {string} html text
+ * escape code from markdown-it
+ * @param {string} html HTML string
+ * @param {string} encode Boolean value of whether encode or not
+ * @returns {string}
  */
-Convertor.prototype._markdownToHtmlWithCodeHighlight = function(markdown) {
-    markdown = markdown.replace(/\\\|/g, ':ESCAPE_VERTICAL_BAR:');
-
-    return marked(markdown, {
-        renderer: markedCustomRenderer,
-        gfm: true,
-        tables: true,
-        breaks: true,
-        pedantic: false,
-        sanitize: false,
-        smartLists: true,
-        smartypants: false,
-        highlight: function(code, type) {
-            return hljs.getLanguage(type) ? hljs.highlight(type, code).value : code;
-        }
-    }).replace(/:ESCAPE_VERTICAL_BAR:/g, '|');
-};
-
-/**
- * _markdownToHtml
- * Convert markdown to html
- * @private
- * @memberOf Convertor
- * @param {string} markdown markdown text
- * @returns {string} html text
- */
-Convertor.prototype._markdownToHtml = function(markdown) {
-    markdown = markdown.replace(/\\\|/g, ':ESCAPE_VERTICAL_BAR:');
-
-    return marked(markdown, {
-        renderer: markedCustomRenderer,
-        gfm: true,
-        tables: true,
-        breaks: true,
-        pedantic: false,
-        sanitize: false,
-        smartLists: true,
-        smartypants: false
-    }).replace(/:ESCAPE_VERTICAL_BAR:/g, '|');
-};
-
-/**
- * toHTMLWithCodeHightlight
- * Convert markdown to html with Codehighlight
- * emit convertorAfterMarkdownToHtmlConverted
- * @api
- * @memberOf Convertor
- * @param {string} markdown markdown text
- * @returns {string} html text
- */
-Convertor.prototype.toHTMLWithCodeHightlight = function(markdown) {
-    var html = this._markdownToHtmlWithCodeHighlight(markdown);
-    html = this.eventManager.emitReduce('convertorAfterMarkdownToHtmlConverted', html);
-
-    return htmlSanitizer(html, true);
-};
-
-/**
- * toHTML
- * Convert markdown to html
- * emit convertorAfterMarkdownToHtmlConverted
- * @api
- * @memberOf Convertor
- * @param {string} markdown markdown text
- * @returns {string} html text
- */
-Convertor.prototype.toHTML = function(markdown) {
-    var html = this._markdownToHtml(markdown);
-    html = this.eventManager.emitReduce('convertorAfterMarkdownToHtmlConverted', html);
-
-    return htmlSanitizer(html, true);
-};
-
-/**
- * toMarkdown
- * Convert html to markdown
- * emit convertorAfterHtmlToMarkdownConverted
- * @api
- * @memberOf Convertor
- * @param {string} html html text
- * @returns {string} markdown text
- */
-Convertor.prototype.toMarkdown = function(html) {
-    var markdown = toMark(html);
-    markdown = this.eventManager.emitReduce('convertorAfterHtmlToMarkdownConverted', markdown);
-
-    return markdown;
-};
-
-/**
- * factory
- * Convertor factory
- * @api
- * @memberOf Convertor
- * @param {EventManager} eventManager eventmanager
- * @returns {Convertor}
- */
-Convertor.factory = function(eventManager) {
-    return new Convertor(eventManager);
-};
-
+function escape(html, encode) {
+    return html.replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 module.exports = Convertor;

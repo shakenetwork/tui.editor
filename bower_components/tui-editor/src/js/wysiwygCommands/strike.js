@@ -4,7 +4,8 @@
  */
 
 
-var CommandManager = require('../commandManager');
+import CommandManager from '../commandManager';
+import domUtils from '../domUtils';
 
 /**
  * Strike
@@ -13,15 +14,23 @@ var CommandManager = require('../commandManager');
  * @augments Command
  * @augments WysiwygCommand
  */
-var Strike = CommandManager.command('wysiwyg', /** @lends Strike */{
+const Strike = CommandManager.command('wysiwyg', /** @lends Strike */{
     name: 'Strike',
     keyMap: ['CTRL+S', 'META+S'],
     /**
      *  커맨드 핸들러
      *  @param {WysiwygEditor} wwe WysiwygEditor instance
      */
-    exec: function(wwe) {
-        var sq = wwe.getEditor();
+    exec(wwe) {
+        const sq = wwe.getEditor();
+        const range = sq.getSelection();
+        const tableSelectionManager = wwe.getManager('tableSelection');
+
+        sq.focus();
+
+        if (sq.hasFormat('table') && tableSelectionManager.getSelectedCells().length) {
+            tableSelectionManager.createRangeBySelectedCells();
+        }
 
         if (sq.hasFormat('S')) {
             sq.changeFormat(null, {tag: 'S'});
@@ -32,7 +41,10 @@ var Strike = CommandManager.command('wysiwyg', /** @lends Strike */{
             sq.strikethrough();
         }
 
-        sq.focus();
+        if (sq.hasFormat('table') && !domUtils.isTextNode(range.commonAncestorContainer)) {
+            range.collapse(true);
+            sq.setSelection(range);
+        }
     }
 });
 

@@ -3,21 +3,10 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
+import LayerPopup from './layerpopup';
+import i18n from '../i18n';
 
-var LayerPopup = require('./layerpopup');
-
-var util = tui.util;
-
-var POPUP_CONTENT = [
-    '<button type="button" class="te-table-add-row">행 삽입</button>',
-    '<button type="button" class="te-table-add-col">열 삽입</button>',
-    '<button type="button" class="te-table-remove-row">행 삭제</button>',
-    '<button type="button" class="te-table-remove-col">열 삭제</button>',
-    '<button type="button" class="te-table-col-align-left">열 왼쪽 정렬</button>',
-    '<button type="button" class="te-table-col-align-center">열 가운데 정렬</button>',
-    '<button type="button" class="te-table-col-align-right">열 오른쪽 정렬</button>',
-    '<button type="button" class="te-table-remove">표 삭제</button>'
-].join('');
+const util = tui.util;
 
 /**
  * PopupTableUtils
@@ -29,6 +18,17 @@ var POPUP_CONTENT = [
  * @param {object} options options
  */
 function PopupTableUtils(options) {
+    const POPUP_CONTENT = [
+        `<button type="button" class="te-table-add-row">${i18n.get('Add row')}</button>`,
+        `<button type="button" class="te-table-add-col">${i18n.get('Add col')}</button>`,
+        `<button type="button" class="te-table-remove-row">${i18n.get('Remove row')}</button>`,
+        `<button type="button" class="te-table-remove-col">${i18n.get('Remove col')}</button>`,
+        `<button type="button" class="te-table-col-align-left">${i18n.get('Align left')}</button>`,
+        `<button type="button" class="te-table-col-align-center">${i18n.get('Align center')}</button>`,
+        `<button type="button" class="te-table-col-align-right">${i18n.get('Align right')}</button>`,
+        `<button type="button" class="te-table-remove">${i18n.get('Remove table')}</button>`
+    ].join('');
+
     options = util.extend({
         title: false,
         className: 'te-popup-table-utils',
@@ -54,37 +54,37 @@ PopupTableUtils.prototype = util.extend(
  * Bind element events
  */
 PopupTableUtils.prototype._bindContentEvent = function() {
-    var self = this;
+    const self = this;
 
-    this.on('click .te-table-add-row', function() {
+    this.on('click .te-table-add-row', () => {
         self.eventManager.emit('command', 'AddRow');
     });
 
-    this.on('click .te-table-add-col', function() {
+    this.on('click .te-table-add-col', () => {
         self.eventManager.emit('command', 'AddCol');
     });
 
-    this.on('click .te-table-remove-row', function() {
+    this.on('click .te-table-remove-row', () => {
         self.eventManager.emit('command', 'RemoveRow');
     });
 
-    this.on('click .te-table-col-align-left', function() {
+    this.on('click .te-table-col-align-left', () => {
         self.eventManager.emit('command', 'AlignCol', 'left');
     });
 
-    this.on('click .te-table-col-align-center', function() {
+    this.on('click .te-table-col-align-center', () => {
         self.eventManager.emit('command', 'AlignCol', 'center');
     });
 
-    this.on('click .te-table-col-align-right', function() {
+    this.on('click .te-table-col-align-right', () => {
         self.eventManager.emit('command', 'AlignCol', 'right');
     });
 
-    this.on('click .te-table-remove-col', function() {
+    this.on('click .te-table-remove-col', () => {
         self.eventManager.emit('command', 'RemoveCol');
     });
 
-    this.on('click .te-table-remove', function() {
+    this.on('click .te-table-remove', () => {
         self.eventManager.emit('command', 'RemoveTable');
     });
 };
@@ -94,20 +94,20 @@ PopupTableUtils.prototype._bindContentEvent = function() {
  * Bind event manager event
  */
 PopupTableUtils.prototype._linkWithEventManager = function() {
-    var self = this;
+    const self = this;
 
-    this.eventManager.listen('focus', function() {
+    this.eventManager.listen('focus', () => {
         self.hide();
     });
 
-    this.eventManager.listen('mousedown', function() {
+    this.eventManager.listen('mousedown', () => {
         self.hide();
     });
 
-    this.eventManager.listen('openPopupTableUtils', function(event) {
-        var offset = self.$el.parent().offset();
-        var x = event.clientX - offset.left;
-        var y = event.clientY - offset.top + $(window).scrollTop();
+    this.eventManager.listen('openPopupTableUtils', event => {
+        const offset = self.$el.parent().offset();
+        const x = event.clientX - offset.left;
+        const y = event.clientY - offset.top + $(window).scrollTop();
 
         self.eventManager.emit('closeAllPopup');
 
@@ -120,7 +120,7 @@ PopupTableUtils.prototype._linkWithEventManager = function() {
         self.show();
     });
 
-    this.eventManager.listen('closeAllPopup', function() {
+    this.eventManager.listen('closeAllPopup', () => {
         self.hide();
     });
 };

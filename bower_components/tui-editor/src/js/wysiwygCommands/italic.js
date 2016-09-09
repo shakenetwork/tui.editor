@@ -1,10 +1,12 @@
 /**
  * @fileoverview Implements WysiwygCommand
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
+ * @author Junghwan Park(junghwan.park@nhnent.com) FE Development Team/NHN Ent.
  */
 
 
-var CommandManager = require('../commandManager');
+import CommandManager from '../commandManager';
+import domUtils from '../domUtils';
 
 /**
  * Italic
@@ -13,15 +15,23 @@ var CommandManager = require('../commandManager');
  * @augments Command
  * @augments WysiwygCommand
  */
-var Italic = CommandManager.command('wysiwyg', /** @lends Italic */{
+const Italic = CommandManager.command('wysiwyg', /** @lends Italic */{
     name: 'Italic',
     keyMap: ['CTRL+I', 'META+I'],
     /**
      *  커맨드 핸들러
      *  @param {WysiwygEditor} wwe WYsiwygEditor instance
      */
-    exec: function(wwe) {
-        var sq = wwe.getEditor();
+    exec(wwe) {
+        const sq = wwe.getEditor();
+        const range = sq.getSelection();
+        const tableSelectionManager = wwe.getManager('tableSelection');
+
+        sq.focus();
+
+        if (sq.hasFormat('table') && tableSelectionManager.getSelectedCells().length) {
+            tableSelectionManager.createRangeBySelectedCells();
+        }
 
         if (sq.hasFormat('i') || sq.hasFormat('em')) {
             sq.changeFormat(null, {tag: 'i'});
@@ -32,7 +42,10 @@ var Italic = CommandManager.command('wysiwyg', /** @lends Italic */{
             sq.italic();
         }
 
-        sq.focus();
+        if (sq.hasFormat('table') && !domUtils.isTextNode(range.commonAncestorContainer)) {
+            range.collapse(true);
+            sq.setSelection(range);
+        }
     }
 });
 

@@ -3,23 +3,10 @@
  * @author Minho choi(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
+import LayerPopup from './layerpopup';
+import i18n from '../i18n';
 
-var LayerPopup = require('./layerpopup');
-
-var util = tui.util;
-
-/* eslint-disable indent */
-var POPUP_CONTENT = [
-    '<ul>',
-        '<li data-value="1"><h1>제목</h1></li>',
-        '<li data-value="2"><h2>제목</h2></li>',
-        '<li data-value="3"><h3>제목</h3></li>',
-        '<li data-value="4"><h4>제목</h4></li>',
-        '<li data-value="5"><h5>제목</h5></li>',
-        '<li data-value="6"><h6>제목</h6></li>',
-    '</ul>'
-].join('');
-/* eslint-enable indent */
+const util = tui.util;
 
 /**
  * PopupHeading
@@ -31,6 +18,19 @@ var POPUP_CONTENT = [
  * @param {object} options options
  */
 function PopupAddHeading(options) {
+    /* eslint-disable indent */
+    const POPUP_CONTENT = [
+        '<ul>',
+            `<li data-value="1"><h1>${i18n.get('Heading')} 1</h1></li>`,
+            `<li data-value="2"><h2>${i18n.get('Heading')} 2</h2></li>`,
+            `<li data-value="3"><h3>${i18n.get('Heading')} 3</h3></li>`,
+            `<li data-value="4"><h4>${i18n.get('Heading')} 4</h4></li>`,
+            `<li data-value="5"><h5>${i18n.get('Heading')} 5</h5></li>`,
+            `<li data-value="6"><h6>${i18n.get('Heading')} 6</h6></li>`,
+        '</ul>'
+    ].join('');
+    /* eslint-enable indent */
+
     options = util.extend({
         title: false,
         className: 'te-heading-add',
@@ -50,13 +50,13 @@ PopupAddHeading.prototype = util.extend(
 );
 
 PopupAddHeading.prototype._linkWithEventManager = function() {
-    var self = this;
+    const self = this;
 
-    this.eventManager.listen('focus', function() {
+    this.eventManager.listen('focus', () => {
         self.hide();
     });
 
-    this.eventManager.listen('openHeadingSelect', function() {
+    this.eventManager.listen('openHeadingSelect', () => {
         self.eventManager.emit('closeAllPopup');
         self.$el.css({
             'top': self.$button.position().top + self.$button.height() + 5,
@@ -65,17 +65,19 @@ PopupAddHeading.prototype._linkWithEventManager = function() {
         self.show();
     });
 
-    this.eventManager.listen('closeAllPopup', function() {
+    this.eventManager.listen('closeAllPopup', () => {
         self.hide();
     });
 };
 
 PopupAddHeading.prototype._bindEvent = function() {
-    var self = this;
+    const self = this;
 
+    /* eslint-disable prefer-arrow-callback*/
     this.on('click li', /** @this Node */function() {
         self.eventManager.emit('command', 'Heading', $(this).data('value'));
     });
+    /* eslint-enable prefer-arrow-callback*/
 };
 
 module.exports = PopupAddHeading;

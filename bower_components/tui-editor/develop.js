@@ -19,7 +19,7 @@ Object.assign(config, {
         filename: WEBPACK_DEV_FILE
     },
     debug: true,
-    devtool: 'cheap-module-eval-source-map'
+    devtool: 'inline-source-map'
 });
 
 compiler = webpack(config);
