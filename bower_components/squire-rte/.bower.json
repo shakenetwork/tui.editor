@@ -21,12 +21,14 @@
     "test",
     "tests"
   ],
-  "_release": "61c3df3dfc",
+  "version": "1.6.3",
+  "_release": "1.6.3",
   "_resolution": {
-    "type": "commit",
-    "commit": "61c3df3dfc509487a9247e944c8373198d216882"
+    "type": "version",
+    "tag": "v1.6.3",
+    "commit": "deb8bd8b886e76219b12cc42e10f3eafb0402ca2"
   },
-  "_source": "https://github.com/nhnent/Squire.git",
-  "_target": "61c3df3dfc509487a9247e944c8373198d216882",
-  "_originalSource": "https://github.com/nhnent/Squire.git"
+  "_source": "https://github.com/neilj/Squire.git",
+  "_target": "1.6.3",
+  "_originalSource": "squire-rte"
 }

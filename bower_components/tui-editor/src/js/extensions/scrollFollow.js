@@ -29,9 +29,9 @@ extManager.defineExtension('scrollFollow', editor => {
     let isActive = true;
     let button;
 
-    //UI
+    // UI
     if (editor.getUI().name === 'default') {
-        //init button
+        // init button
         button = new Button({
             className,
             command: 'scrollFollowToggle',
@@ -45,7 +45,7 @@ extManager.defineExtension('scrollFollow', editor => {
             button.$el.hide();
         }
 
-        //hide scroll follow button in wysiwyg
+        // hide scroll follow button in wysiwyg
         editor.on('changeModeToWysiwyg', () => {
             button.$el.hide();
         });
@@ -54,7 +54,7 @@ extManager.defineExtension('scrollFollow', editor => {
             button.$el.show();
         });
 
-        //Commands
+        // Commands
         editor.addCommand('markdown', {
             name: 'scrollFollowToggle',
             exec() {
@@ -71,7 +71,7 @@ extManager.defineExtension('scrollFollow', editor => {
         });
     }
 
-    //Events
+    // Events
     cm.on('change', () => {
         isScrollable = false;
         sectionManager.makeSectionList();
@@ -79,17 +79,21 @@ extManager.defineExtension('scrollFollow', editor => {
 
     editor.on('previewRenderAfter', () => {
         sectionManager.sectionMatch();
-        scrollSync.syncToPreview();
+        scrollSync.syncPreviewScrollTopToMarkdown();
         isScrollable = true;
     });
 
-    cm.on('scroll', () => {
+    editor.eventManager.listen('scroll', event => {
         if (!isActive) {
             return;
         }
 
         if (isScrollable && editor.preview.isVisible()) {
-            scrollSync.syncToPreview();
+            if (event.source === 'markdown' && !scrollSync.isMarkdownScrollEventBlocked) {
+                scrollSync.syncPreviewScrollTopToMarkdown();
+            } else if (event.source === 'preview' && !scrollSync.isPreviewScrollEventBlocked) {
+                scrollSync.syncMarkdownScrollTopToPreview();
+            }
         } else {
             scrollSync.saveScrollInfo();
         }

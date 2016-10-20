@@ -16,7 +16,7 @@ import ViewOnly from './viewOnly';
 import DefaultUI from './ui/defaultUI';
 import i18n from './i18n';
 
-//markdown commands
+// markdown commands
 import mdBold from './markdownCommands/bold';
 import mdItalic from './markdownCommands/italic';
 import mdStrike from './markdownCommands/strike';
@@ -32,7 +32,7 @@ import mdTask from './markdownCommands/task';
 import mdCode from './markdownCommands/code';
 import mdCodeBlock from './markdownCommands/codeBlock';
 
-//wysiwyg Commands
+// wysiwyg Commands
 import wwBold from './wysiwygCommands/bold';
 import wwItalic from './wysiwygCommands/italic';
 import wwStrike from './wysiwygCommands/strike';
@@ -80,6 +80,7 @@ const __nedInstance = [];
          * @param {function} options.hooks.previewBeforeHook Submit preview to hook URL before preview be shown
          * @param {function} options.hooks.addImageBlobHook hook for image upload.
     * @param {string} language language
+    * @param {boolean} useDefaultHTMLSanitizer use default htmlSanitizer
  */
 class ToastUIEditor {
     constructor(options) {
@@ -89,7 +90,8 @@ class ToastUIEditor {
             'previewStyle': 'tab',
             'initialEditType': 'markdown',
             'height': 300,
-            'language': 'en_US'
+            'language': 'en_US',
+            'useDefaultHTMLSanitizer': true
         }, options);
 
         this.eventManager = new EventManager();
@@ -98,6 +100,10 @@ class ToastUIEditor {
 
         this.commandManager = new CommandManager(this);
         this.convertor = new Convertor(this.eventManager);
+
+        if (this.options.useDefaultHTMLSanitizer) {
+            this.convertor.initHtmlSanitizer();
+        }
 
         if (this.options.hooks) {
             util.forEach(this.options.hooks, (fn, key) => {
@@ -126,7 +132,7 @@ class ToastUIEditor {
 
         this.mdEditor.init();
 
-        this.changeMode(self.options.initialEditType);
+        this.changeMode(self.options.initialEditType, true);
 
         this.contentHeight(self.options.height);
 
@@ -398,8 +404,9 @@ class ToastUIEditor {
      * @api
      * @memberOf ToastUIEditor
      * @param {string} mode Editor mode name of want to change
+     * @param {boolean} isWithoutFocus Change mode without focus
      */
-    changeMode(mode) {
+    changeMode(mode, isWithoutFocus) {
         if (this.currentMode === mode) {
             return;
         }
@@ -421,7 +428,9 @@ class ToastUIEditor {
 
         this.eventManager.emit('changeMode', mode);
 
-        this.focus();
+        if (!isWithoutFocus) {
+            this.focus();
+        }
     }
 
     /**

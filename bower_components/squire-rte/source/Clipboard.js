@@ -38,12 +38,32 @@ var onCopy = function ( event ) {
     var clipboardData = event.clipboardData;
     var range = this.getSelection();
     var node = this.createElement( 'div' );
+    var root = this._root;
+    var startBlock, endBlock, copyRoot, contents, parent, newContents;
 
     // Edge only seems to support setting plain text as of 2016-03-11.
     // Mobile Safari flat out doesn't work:
     // https://bugs.webkit.org/show_bug.cgi?id=143776
     if ( !isEdge && !isIOS && clipboardData ) {
-        node.appendChild( range.cloneContents() );
+        range = range.cloneRange();
+        startBlock = getStartBlockOfRange( range, root );
+        endBlock = getEndBlockOfRange( range, root );
+        copyRoot = ( startBlock === endBlock ) ? startBlock : root;
+        moveRangeBoundariesDownTree( range );
+        moveRangeBoundariesUpTree( range, copyRoot );
+        contents = range.cloneContents();
+        parent = range.commonAncestorContainer;
+        if ( parent.nodeType === TEXT_NODE ) {
+            parent = parent.parentNode;
+        }
+        while ( parent && parent !== copyRoot ) {
+            newContents = parent.cloneNode( false );
+            newContents.appendChild( contents );
+            contents = newContents;
+            parent = parent.parentNode;
+        }
+        node.appendChild( contents );
+
         clipboardData.setData( 'text/html', node.innerHTML );
         clipboardData.setData( 'text/plain',
             node.innerText || node.textContent );
@@ -51,14 +71,21 @@ var onCopy = function ( event ) {
     }
 };
 
+// Need to monitor for shift key like this, as event.shiftKey is not available
+// in paste event.
+function monitorShiftKey ( event ) {
+    this.isShiftDown = event.shiftKey;
+}
+
 var onPaste = function ( event ) {
-    var clipboardData = event.clipboardData,
-        items = clipboardData && clipboardData.items,
-        fireDrop = false,
-        hasImage = false,
-        plainItem = null,
-        self = this,
-        l, item, type, types, data;
+    var clipboardData = event.clipboardData;
+    var items = clipboardData && clipboardData.items;
+    var choosePlain = this.isShiftDown;
+    var fireDrop = false;
+    var hasImage = false;
+    var plainItem = null;
+    var self = this;
+    var l, item, type, types, data;
 
     // Current HTML5 Clipboard interface
     // ---------------------------------
@@ -71,7 +98,7 @@ var onPaste = function ( event ) {
         while ( l-- ) {
             item = items[l];
             type = item.type;
-            if ( type === 'text/html' ) {
+            if ( !choosePlain && type === 'text/html' ) {
                 /*jshint loopfunc: true */
                 item.getAsString( function ( html ) {
                     self.insertHTML( html, true );
@@ -82,7 +109,7 @@ var onPaste = function ( event ) {
             if ( type === 'text/plain' ) {
                 plainItem = item;
             }
-            if ( /^image\/.*/.test( type ) ) {
+            if ( !choosePlain && /^image\/.*/.test( type ) ) {
                 hasImage = true;
             }
         }
@@ -134,7 +161,7 @@ var onPaste = function ( event ) {
         // insert plain text instead. On iOS, Facebook (and possibly other
         // apps?) copy links as type text/uri-list, but also insert a **blank**
         // text/plain item onto the clipboard. Why? Who knows.
-        if (( data = clipboardData.getData( 'text/html' ) )) {
+        if ( !choosePlain && ( data = clipboardData.getData( 'text/html' ) ) ) {
             this.insertHTML( data, true );
         } else if (
                 ( data = clipboardData.getData( 'text/plain' ) ) ||

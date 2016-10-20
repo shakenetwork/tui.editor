@@ -70,7 +70,7 @@ class WwTableManager {
             this._insertDefaultBlockBetweenTable();
         });
 
-        //remove last br in td or th
+        // remove last br in td or th
         this.eventManager.listen('wysiwygProcessHTMLText', html => html.replace(/<br \/>(<\/td>|<\/th>)/g, '$1'));
 
         this.wwe.getEditor().addEventListener('paste', ev => {
@@ -106,7 +106,7 @@ class WwTableManager {
                 this._recordUndoStateAndResetCellNode(range);
             }
 
-            if (!this._isModifierKeyPushed(ev)) {
+            if (isRangeInTable && !this._isModifierKeyPushed(ev)) {
                 this.wwe.getEditor().modifyDocument(() => {
                     selectionManager.removeClassAttrbuteFromAllCellsIfNeed();
                 });
@@ -217,11 +217,12 @@ class WwTableManager {
                 this._insertBRIfNeed(range);
                 this._removeContentsAndChangeSelectionIfNeed(range, keymap, ev);
                 isNeedNext = false;
-            } else if ((isBackspace && this._isBeforeTable(range))
-                || (!isBackspace && this._isAfterTable(range))
+            } else if ((!isBackspace && this._isBeforeTable(range))
+                || (isBackspace && this._isAfterTable(range))
             ) {
                 ev.preventDefault();
-                this._removeTableOnBackspace(range);
+                const startOffset = (isBackspace ? range.startOffset - 1 : range.startOffset);
+                this._removeTable(range, domUtils.getChildNodeByOffset(range.startContainer, startOffset));
                 isNeedNext = false;
             }
         } else if (this.isInTable(range)) {
@@ -356,20 +357,20 @@ class WwTableManager {
     }
 
     /**
-     * _removeTableOnBackspace
-     * Remove table on backspace
+     * _removeTable
+     * Remove table
      * @param {Range} range range
+     * @param {Node} table table
      * @memberOf WwTableManager
      * @private
      */
-    _removeTableOnBackspace(range) {
-        const table = domUtils.getChildNodeByOffset(range.startContainer, range.startOffset);
-
-        this.wwe.getEditor().saveUndoState(range);
-
-        this.wwe.insertSelectionMarker(range);
-        $(table).remove();
-        this.wwe.restoreSelectionMarker();
+    _removeTable(range, table) {
+        if (table.tagName === 'TABLE') {
+            this.wwe.getEditor().saveUndoState(range);
+            this.wwe.saveSelection(range);
+            $(table).remove();
+            this.wwe.restoreSavedSelection();
+        }
     }
 
     /**
@@ -1037,7 +1038,9 @@ class WwTableManager {
 
         if (range.collapsed) {
             if (this.isInTable(range) && currentCell) {
-                if (direction === 'previous' || interval === 'row' && !tui.util.isUndefined(ev)) {
+                if ((direction === 'previous' || interval === 'row')
+                    && !tui.util.isUndefined(ev)
+                ) {
                     ev.preventDefault();
                 }
 
@@ -1117,8 +1120,8 @@ class WwTableManager {
      * @private
      */
     _removeBRIfNeed(range) {
-        const startContainer = domUtils.isTextNode(range.startContainer)
-            ? range.startContainer.parentNode : range.startContainer;
+        const isText = domUtils.isTextNode(range.startContainer);
+        const startContainer = isText ? range.startContainer.parentNode : range.startContainer;
         const nodeName = domUtils.getNodeName(startContainer);
 
         if (/td|th/i.test(nodeName) && range.collapsed && startContainer.textContent.length === 1) {
@@ -1133,8 +1136,8 @@ class WwTableManager {
      * @private
      */
     _insertBRIfNeed(range) {
-        const currentCell = range.startContainer.nodeType === 3
-            ? range.startContainer.parentNode : range.startContainer;
+        const isText = domUtils.isTextNode(range.startContainer);
+        const currentCell = isText ? range.startContainer.parentNode : range.startContainer;
         const nodeName = domUtils.getNodeName(currentCell);
         const $currentCell = $(currentCell);
 

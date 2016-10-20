@@ -56,8 +56,6 @@ class MarkdownEditor {
                 'Enter': 'newlineAndIndentContinue',
                 'Tab': 'subListIndentTab',
                 'Shift-Tab': 'indentLess',
-                'Alt-Left': 'indentLess',
-                'Alt-Right': 'indentMore',
                 'Alt-Up': 'replaceLineTextToUpper',
                 'Alt-Down': 'replaceLineTextToLower'
             },
@@ -82,7 +80,10 @@ class MarkdownEditor {
 
         this.cm.on('beforeChange', (cm, ev) => {
             if (ev.origin === 'paste') {
-                this.eventManager.emit('pasteBefore', {source: 'markdown', data: ev});
+                this.eventManager.emit('pasteBefore', {
+                    source: 'markdown',
+                    data: ev
+                });
             }
         });
 

@@ -46,12 +46,19 @@ class Preview {
             latestMarkdownValue = markdownEditor.getValue();
 
             if (this.isVisible()) {
-                this.lazyRunner.run('refresh', markdownEditor.getValue());
+                this.lazyRunner.run('refresh',
+                    markdownEditor.getValue().replace(/<br>\n/g, '<br>'));
             }
         });
 
         this.eventManager.listen('previewNeedsRefresh', value => {
             this.refresh(value || latestMarkdownValue);
+        });
+        this.$el.on('scroll', event => {
+            this.eventManager.emit('scroll', {
+                source: 'preview',
+                data: event
+            });
         });
     }
 

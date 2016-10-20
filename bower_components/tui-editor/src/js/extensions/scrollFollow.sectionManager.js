@@ -5,6 +5,9 @@
 
 
 const FIND_HEADER_RX = /^ *(#{1,6}) +([^\n]+?) *#* *(?:\n+|$)/;
+const FIND_LIST_RX = /^ *(\*|-|\d+\.|[*-] \[[ xX]])\s/;
+const FIND_QUOTE_RX = /^ {0,3}(> ?)*\s/;
+const FIND_IMAGE_RX = /!\[([^\[\]]*)]\(([^)]*)\)/g;
 const FIND_SETEXT_HEADER_RX = /^ *(?:={1,}|-{1,})\s*$/;
 const FIND_CODEBLOCK_END_RX = /^ *(`{3,}|~{3,})[ ]*$/;
 const FIND_CODEBLOCK_START_RX = /^ *(`{3,}|~{3,})[ \.]*(\S+)? */;
@@ -94,6 +97,7 @@ class SectionManager {
             onTable = false,
             onCodeBlock = false,
             trimCapture = '';
+        let isRightAfterImageSection = false;
 
         const lineLength = this.cm.getDoc().lineCount();
 
@@ -109,22 +113,38 @@ class SectionManager {
                 onTable = true;
             }
 
-            if (onCodeBlock && this._isCodeBlockEnd(prevLineString)) {
+            if (onCodeBlock
+                && this._isCodeBlockEnd(prevLineString)
+                && !this._doFollowedLinesHaveCodeBlockEnd(i, lineLength)
+            ) {
                 onCodeBlock = false;
             } else if (!onCodeBlock && this._isCodeBlockStart(lineString)) {
                 onCodeBlock = this._doFollowedLinesHaveCodeBlockEnd(i, lineLength);
             }
 
-            //atx header
+            // atx header
             if (this._isAtxHeader(lineString)) {
+                isRightAfterImageSection = false;
                 isSection = true;
-                //setext header
-            } else if (!onCodeBlock && !onTable && this._isSeTextHeader(lineString, nextLineString)) {
+                // setext header
+            } else if (!this._isCodeBlockEnd(lineString)
+                && !onTable
+                && this._isSeTextHeader(lineString, nextLineString)
+            ) {
+                isRightAfterImageSection = false;
+                isSection = true;
+            } else if (!onCodeBlock && !onTable
+                && this._isImage(lineString) && !this._isList(lineString) && !this._isQuote(lineString)
+            ) {
+                isRightAfterImageSection = true;
+                isSection = true;
+            } else if (isRightAfterImageSection) {
+                isRightAfterImageSection = false;
                 isSection = true;
             }
 
-            //빈공간으로 시작되다다가 헤더를 만난경우 섹션은 두개가 생성되는데
-            //프리뷰에서는 빈공간이 트리밍되어 섹션 한개 밖에 생성되지 않아 매칭이 되지 않는 문제 해결
+            // 빈공간으로 시작되다다가 헤더를 만난경우 섹션은 두개가 생성되는데
+            // 프리뷰에서는 빈공간이 트리밍되어 섹션 한개 밖에 생성되지 않아 매칭이 되지 않는 문제 해결
             if (isTrimming) {
                 trimCapture += lineString.trim();
 
@@ -232,6 +252,18 @@ class SectionManager {
             && FIND_SETEXT_HEADER_RX.test(nextLineString);
     }
 
+    _isImage(lineString) {
+        return FIND_IMAGE_RX.test(lineString);
+    }
+
+    _isList(lineString) {
+        return FIND_LIST_RX.test(lineString);
+    }
+
+    _isQuote(lineString) {
+        return FIND_QUOTE_RX.test(lineString);
+    }
+
     /**
      * makeSectionList
      * make section list
@@ -281,15 +313,25 @@ class SectionManager {
     _getPreviewSections() {
         const sections = [];
         let lastSection = 0;
+        let isRightAfterImageSection = false;
 
         sections[0] = [];
 
         this.$previewContent.contents().filter(findElementNodeFilter).each((index, el) => {
-            if (el.tagName.match(/H1|H2|H3|H4|H5|H6/)) {
-                if (sections[lastSection].length) {
-                    sections.push([]);
-                    lastSection += 1;
-                }
+            const isParagraph = (el.tagName === 'P');
+            const isHeading = el.tagName.match(/^(H1|H2|H3|H4|H5|H6)$/);
+            const isImage = (isParagraph && $(el).children('IMG').length !== 0);
+
+            if ((isHeading || isImage || isRightAfterImageSection)
+                && sections[lastSection].length
+            ) {
+                sections.push([]);
+                lastSection += 1;
+                isRightAfterImageSection = false;
+            }
+
+            if (isImage) {
+                isRightAfterImageSection = true;
             }
 
             sections[lastSection].push(el);

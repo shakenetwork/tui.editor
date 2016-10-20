@@ -7,8 +7,9 @@ import UIController from './uicontroller';
 import templater from './templater';
 
 const util = tui.util;
-
+/*eslint-disable*/
 const buttonTmpl = '<button type="button" data-index="${index}">${name}</button>';
+/*eslint-enable*/
 
 /**
  * Tab
@@ -101,6 +102,7 @@ Tab.prototype._getButtonData = function() {
 Tab.prototype._onButtonClick = function(ev) {
     const $button = $(ev.target);
     this._activateTabByButton($button);
+    this.trigger('itemClick', $button.text());
 };
 
 /**
@@ -162,8 +164,6 @@ Tab.prototype._activateTabByButton = function($button) {
 
     this._activateButton($button);
     this._activateSection($button.attr('data-index'));
-
-    this.trigger('itemClick', $button.text());
 };
 
 /**

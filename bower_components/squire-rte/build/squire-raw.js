@@ -179,7 +179,7 @@ TreeWalker.prototype.previousPONode = function () {
     }
 };
 
-var inlineNodeNames  = /^(?:#text|A(?:BBR|CRONYM)?|B(?:R|D[IO])?|C(?:ITE|ODE)|D(?:ATA|EL|FN)|EM|FONT|HR|I(?:FRAME|MG|NPUT|NS)?|KBD|Q|R(?:P|T|UBY)|S(?:AMP|MALL|PAN|TR(?:IKE|ONG)|U[BP])?|U|VAR|WBR)$/;
+var inlineNodeNames  = /^(?:#text|A(?:BBR|CRONYM)?|B(?:R|D[IO])?|C(?:ITE|ODE)|D(?:ATA|EL|FN)|EM|FONT|HR|I(?:FRAME|MG|NPUT|NS)?|KBD|Q|R(?:P|T|UBY)|S(?:AMP|MALL|PAN|TR(?:IKE|ONG)|U[BP])?|TIME|U|VAR|WBR)$/;
 
 var leafNodeNames = {
     BR: 1,
@@ -1111,7 +1111,7 @@ var getStartBlockOfRange = function ( range, root ) {
     // If inline, get the containing block.
     if ( isInline( container ) ) {
         block = getPreviousBlock( container, root );
-    } else if ( isBlock( container ) ) {
+    } else if ( container !== root && isBlock( container ) ) {
         block = container;
     } else {
         block = getNodeBefore( container, range.startOffset );
@@ -1130,7 +1130,7 @@ var getEndBlockOfRange = function ( range, root ) {
     // If inline, get the containing block.
     if ( isInline( container ) ) {
         block = getPreviousBlock( container, root );
-    } else if ( isBlock( container ) ) {
+    } else if ( container !== root && isBlock( container ) ) {
         block = container;
     } else {
         block = getNodeAfter( container, range.endOffset );
@@ -2117,12 +2117,32 @@ var onCopy = function ( event ) {
     var clipboardData = event.clipboardData;
     var range = this.getSelection();
     var node = this.createElement( 'div' );
+    var root = this._root;
+    var startBlock, endBlock, copyRoot, contents, parent, newContents;
 
     // Edge only seems to support setting plain text as of 2016-03-11.
     // Mobile Safari flat out doesn't work:
     // https://bugs.webkit.org/show_bug.cgi?id=143776
     if ( !isEdge && !isIOS && clipboardData ) {
-        node.appendChild( range.cloneContents() );
+        range = range.cloneRange();
+        startBlock = getStartBlockOfRange( range, root );
+        endBlock = getEndBlockOfRange( range, root );
+        copyRoot = ( startBlock === endBlock ) ? startBlock : root;
+        moveRangeBoundariesDownTree( range );
+        moveRangeBoundariesUpTree( range, copyRoot );
+        contents = range.cloneContents();
+        parent = range.commonAncestorContainer;
+        if ( parent.nodeType === TEXT_NODE ) {
+            parent = parent.parentNode;
+        }
+        while ( parent && parent !== copyRoot ) {
+            newContents = parent.cloneNode( false );
+            newContents.appendChild( contents );
+            contents = newContents;
+            parent = parent.parentNode;
+        }
+        node.appendChild( contents );
+
         clipboardData.setData( 'text/html', node.innerHTML );
         clipboardData.setData( 'text/plain',
             node.innerText || node.textContent );
@@ -2130,14 +2150,21 @@ var onCopy = function ( event ) {
     }
 };
 
+// Need to monitor for shift key like this, as event.shiftKey is not available
+// in paste event.
+function monitorShiftKey ( event ) {
+    this.isShiftDown = event.shiftKey;
+}
+
 var onPaste = function ( event ) {
-    var clipboardData = event.clipboardData,
-        items = clipboardData && clipboardData.items,
-        fireDrop = false,
-        hasImage = false,
-        plainItem = null,
-        self = this,
-        l, item, type, types, data;
+    var clipboardData = event.clipboardData;
+    var items = clipboardData && clipboardData.items;
+    var choosePlain = this.isShiftDown;
+    var fireDrop = false;
+    var hasImage = false;
+    var plainItem = null;
+    var self = this;
+    var l, item, type, types, data;
 
     // Current HTML5 Clipboard interface
     // ---------------------------------
@@ -2150,7 +2177,7 @@ var onPaste = function ( event ) {
         while ( l-- ) {
             item = items[l];
             type = item.type;
-            if ( type === 'text/html' ) {
+            if ( !choosePlain && type === 'text/html' ) {
                 /*jshint loopfunc: true */
                 item.getAsString( function ( html ) {
                     self.insertHTML( html, true );
@@ -2161,7 +2188,7 @@ var onPaste = function ( event ) {
             if ( type === 'text/plain' ) {
                 plainItem = item;
             }
-            if ( /^image\/.*/.test( type ) ) {
+            if ( !choosePlain && /^image\/.*/.test( type ) ) {
                 hasImage = true;
             }
         }
@@ -2213,7 +2240,7 @@ var onPaste = function ( event ) {
         // insert plain text instead. On iOS, Facebook (and possibly other
         // apps?) copy links as type text/uri-list, but also insert a **blank**
         // text/plain item onto the clipboard. Why? Who knows.
-        if (( data = clipboardData.getData( 'text/html' ) )) {
+        if ( !choosePlain && ( data = clipboardData.getData( 'text/html' ) ) ) {
             this.insertHTML( data, true );
         } else if (
                 ( data = clipboardData.getData( 'text/plain' ) ) ||
@@ -2414,6 +2441,8 @@ function Squire ( root, config ) {
     this._awaitingPaste = false;
     this.addEventListener( isIElt11 ? 'beforecut' : 'cut', onCut );
     this.addEventListener( 'copy', onCopy );
+    this.addEventListener( 'keydown', monitorShiftKey );
+    this.addEventListener( 'keyup', monitorShiftKey );
     this.addEventListener( isIElt11 ? 'beforepaste' : 'paste', onPaste );
     this.addEventListener( 'drop', onDrop );
 
@@ -2858,13 +2887,18 @@ proto.getPath = function () {
 
 // WebKit bug: https://bugs.webkit.org/show_bug.cgi?id=15256
 
-var removeZWS = function ( root ) {
+// Walk down the tree starting at the root and remove any ZWS. If the node only
+// contained ZWS space then remove it too. We may want to keep one ZWS node at
+// the bottom of the tree so the block can be selected. Define that node as the
+// keepNode.
+var removeZWS = function ( root, keepNode ) {
     var walker = new TreeWalker( root, SHOW_TEXT, function () {
             return true;
         }, false ),
         parent, node, index;
     while ( node = walker.nextNode() ) {
-        while ( ( index = node.data.indexOf( ZWS ) ) > -1 ) {
+        while ( ( index = node.data.indexOf( ZWS ) ) > -1  &&
+                ( !keepNode || node.parentNode !== keepNode ) ) {
             if ( node.length === 1 ) {
                 do {
                     parent = node.parentNode;
@@ -2930,15 +2964,7 @@ proto._updatePathOnEvent = function () {
 // --- Focus ---
 
 proto.focus = function () {
-    var scrollTop = this.scrollTop();
-
     this._root.focus();
-
-    // In webkit, if contenteditable element focus method have been invoked when another input element has focus,
-    // contenteditable scroll to top automatically so we need scroll it back
-    if (scrollTop !== this.scrollTop()) {
-        this.scrollTop(scrollTop);
-    }
 
     if ( isIE ) {
         this.fireEvent( 'focus' );
@@ -2956,16 +2982,6 @@ proto.blur = function () {
 
     return this;
 };
-
-// --- scrollTop ---
-
-proto.scrollTop = function(value) {
-    if (value) {
-        this._root.scrollTop = value;
-    }
-
-    return this._root.scrollTop;
-}
 
 // --- Bookmarking ---
 
@@ -3290,13 +3306,21 @@ proto._addFormat = function ( tag, attributes, range ) {
     // it round the range and focus it.
     var root = this._root;
     var el, walker, startContainer, endContainer, startOffset, endOffset,
-        node, needsFormat;
+        node, needsFormat, block;
 
     if ( range.collapsed ) {
         el = fixCursor( this.createElement( tag, attributes ), root );
         insertNodeInRange( range, el );
         range.setStart( el.firstChild, el.firstChild.length );
         range.collapse( true );
+
+        // Clean up any previous formats that may have been set on this block
+        // that are unused.
+        block = el;
+        while ( isInline( block ) ) {
+            block = block.parentNode;
+        }
+        removeZWS( block, el );
     }
     // Otherwise we find all the textnodes in the range (splitting
     // partially selected nodes) and if they're not already formatted
@@ -3311,8 +3335,8 @@ proto._addFormat = function ( tag, attributes, range ) {
         // to apply when the user types something in the block, which is
         // presumably what was intended.
         //
-        // IMG tags are included because we may want to create a link around them,
-        // and adding other styles is harmless.
+        // IMG tags are included because we may want to create a link around
+        // them, and adding other styles is harmless.
         walker = new TreeWalker(
             range.commonAncestorContainer,
             SHOW_TEXT|SHOW_ELEMENT,
@@ -4374,6 +4398,32 @@ proto.removeList = command( 'modifyBlocks', removeList );
 
 proto.increaseListLevel = command( 'modifyBlocks', increaseListLevel );
 proto.decreaseListLevel = command( 'modifyBlocks', decreaseListLevel );
+
+// Range.js exports
+Squire.getNodeBefore = getNodeBefore;
+Squire.getNodeAfter = getNodeAfter;
+Squire.insertNodeInRange = insertNodeInRange;
+Squire.extractContentsOfRange = extractContentsOfRange;
+Squire.deleteContentsOfRange = deleteContentsOfRange;
+Squire.insertTreeFragmentIntoRange = insertTreeFragmentIntoRange;
+Squire.isNodeContainedInRange = isNodeContainedInRange;
+Squire.moveRangeBoundariesDownTree = moveRangeBoundariesDownTree;
+Squire.moveRangeBoundariesUpTree = moveRangeBoundariesUpTree;
+Squire.getStartBlockOfRange = getStartBlockOfRange;
+Squire.getEndBlockOfRange = getEndBlockOfRange;
+Squire.contentWalker = contentWalker;
+Squire.rangeDoesStartAtBlockBoundary = rangeDoesStartAtBlockBoundary;
+Squire.rangeDoesEndAtBlockBoundary = rangeDoesEndAtBlockBoundary;
+Squire.expandRangeToBlockBoundaries = expandRangeToBlockBoundaries;
+
+// Clipboard.js exports
+Squire.onPaste = onPaste;
+
+// Editor.js exports
+Squire.addLinks = addLinks;
+Squire.splitBlock = splitBlock;
+Squire.startSelectionId = startSelectionId;
+Squire.endSelectionId = endSelectionId;
 
 if ( typeof exports === 'object' ) {
     module.exports = Squire;
