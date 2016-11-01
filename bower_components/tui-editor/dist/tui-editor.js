@@ -2904,10 +2904,12 @@
 	                    data: keyboardEvent
 	                });
 
-	                this.eventManager.emit('wysiwygKeyEvent', {
-	                    keyMap: keyMap,
-	                    data: keyboardEvent
-	                });
+	                if (!keyboardEvent.defaultPrevented) {
+	                    this.eventManager.emit('wysiwygKeyEvent', {
+	                        keyMap: keyMap,
+	                        data: keyboardEvent
+	                    });
+	                }
 	            }
 	        }
 
@@ -5301,7 +5303,7 @@
 	            var $list = $(list);
 	            var $branchRoot = $list;
 
-	            while (!$branchRoot[0].previousSibling) {
+	            while (!$branchRoot[0].previousSibling && $branchRoot[0].parentElement.tagName.match(/UL|OL|LI/g)) {
 	                $branchRoot = $branchRoot.parent();
 	            }
 
@@ -5732,6 +5734,12 @@
 
 	            this.wwe.addKeyEventHandler('SHIFT+TAB', function (ev) {
 	                return _this2._moveCursorTo('previous', 'cell', ev);
+	            });
+	            this.wwe.addKeyEventHandler('UP', function (ev) {
+	                return _this2._moveCursorTo('previous', 'row', ev);
+	            });
+	            this.wwe.addKeyEventHandler('DOWN', function (ev) {
+	                return _this2._moveCursorTo('next', 'row', ev);
 	            });
 
 	            this._bindKeyEventForTableCopyAndCut();
@@ -10460,7 +10468,10 @@
 	    }, {
 	        key: '_markdownToHtml',
 	        value: function _markdownToHtml(markdown) {
-	            return markdownit.render(markdown.replace(/<br>/ig, '<br data-tomark-pass>'));
+	            markdown = this._addLineBreaksIfNeed(markdown);
+	            markdown = markdown.replace(/<br>/ig, '<br data-tomark-pass>');
+
+	            return markdownitHighlight.render(markdown);
 	        }
 
 	        /**
@@ -10523,7 +10534,6 @@
 	        value: function toMarkdown(html) {
 	            var markdown = toMark(this._appendAttributeForBrIfNeed(html));
 	            markdown = this.eventManager.emitReduce('convertorAfterHtmlToMarkdownConverted', markdown);
-	            markdown = markdown.replace(/<br>/ig, '<br>\n');
 
 	            return markdown;
 	        }
@@ -10532,8 +10542,8 @@
 	        value: function _appendAttributeForBrIfNeed(html) {
 	            var FIND_BR_RX = /<br>/ig;
 	            var FIND_DOUBLE_BR_RX = /<br \/><br \/>/ig;
-	            var FIND_PASSING_AND_NORMAL_BR_RX = /<br data-tomark-pass \/><br \/>(.+)/ig;
-	            var FIND_FIRST_TWO_BRS_RX = /([^>]{1,1})<br data-tomark-pass \/><br data-tomark-pass \/>/g;
+	            var FIND_PASSING_AND_NORMAL_BR_RX = /<br data-tomark-pass \/><br \/>(.)/ig;
+	            var FIND_FIRST_TWO_BRS_RX = /((?:[^b][^r]|[^p][^a][^s][^s]).[^/].)<br data-tomark-pass \/><br(?: data-tomark-pass)? \/>/g;
 
 	            html = html.replace(FIND_BR_RX, '<br />');
 
@@ -10568,14 +10578,19 @@
 	        key: '_addLineBreaksIfNeed',
 	        value: function _addLineBreaksIfNeed(markdown) {
 	            var FIND_IMAGE_RX = /(!\[(?:[^\[\]]*)]\((?:[^)]*)\))/g;
-	            var FIND_IMAGE_IN_LIST_OR_QUOTE_RX = /(\n* *(?:\*|-|\d+\.|[*-] \[[ xX]])\s.*|\n(?: *> *)+)\n\n(!\[(?:[^\[\]]*)]\((?:[^)]*)\)[^\n]*)\n\n/g;
-	            var FIND_IMAGE_IN_TABLE_RX = /(\n\|[^|]*)\n\n(!\[(?:[^\[\]]*)]\((?:[^)]*)\)[^\n]*)\n\n/g;
+	            var resultArray = [];
+	            tui.util.forEach(markdown.split('\n'), function (line, index) {
+	                var FIND_IMAGE_IN_LIST_OR_QUOTE_RX = /^ *(?:\*|-|\d+\.|[*-] \[[ xX]])\s|(?: *> *)+/g;
+	                var FIND_TABLE_RX = /^\|[^|]*\|/ig;
+	                var FIND_INLINE_CODEBLOCK_RX = /^ {4}[^\s]*/ig;
 
-	            markdown = markdown.replace(FIND_IMAGE_RX, '\n\n$1\n\n');
-	            markdown = markdown.replace(FIND_IMAGE_IN_LIST_OR_QUOTE_RX, '$1$2');
-	            markdown = markdown.replace(FIND_IMAGE_IN_TABLE_RX, '$1$2');
+	                if (!FIND_TABLE_RX.test(line) && !FIND_IMAGE_IN_LIST_OR_QUOTE_RX.test(line) && !FIND_INLINE_CODEBLOCK_RX.test(line)) {
+	                    line = line.replace(FIND_IMAGE_RX, '\n\n$1\n\n');
+	                }
+	                resultArray[index] = line;
+	            });
 
-	            return markdown;
+	            return resultArray.join('\n');
 	        }
 
 	        /**
@@ -11609,12 +11624,37 @@
 
 	/**
 	 * 버튼을 추가한다
-	 * @param {Button} button 버튼
+	 * @param {Button} buttons 버튼
 	 * @param {Number} index 버튼위치 (optional)
 	 */
-	Toolbar.prototype.addButton = function (button, index) {
-	    var ev = this.eventManager;
+	Toolbar.prototype.addButton = function (buttons, index) {
+	    var _this = this;
 
+	    var TOOLBAR_GROUP_CLASS_NAME = 'tui-toolbar-button-group';
+	    var $buttonWrap = $('<div class="' + TOOLBAR_GROUP_CLASS_NAME + '"></div>');
+
+	    if (util.isArray(buttons)) {
+	        util.forEach(buttons, function (button) {
+	            $buttonWrap.append(_this._setButton(button).$el);
+	        });
+	    } else {
+	        $buttonWrap.append(this._setButton(buttons).$el);
+	    }
+
+	    if (index) {
+	        this.$buttonContainer.find('.' + TOOLBAR_GROUP_CLASS_NAME).eq(index - 1).after($buttonWrap);
+	    } else {
+	        this.$buttonContainer.append($buttonWrap);
+	    }
+	};
+
+	/**
+	 * 버튼에 이벤트 바인딩
+	 * @param {Button} button 버튼
+	 * @returns {Button}
+	 */
+	Toolbar.prototype._setButton = function (button) {
+	    var ev = this.eventManager;
 	    if (!button.render) {
 	        button = new _button2.default(button);
 	    }
@@ -11629,102 +11669,103 @@
 
 	    this.buttons.push(button);
 
-	    if (index) {
-	        this.$buttonContainer.find('button').eq(index - 1).after(button.$el);
-	    } else {
-	        this.$buttonContainer.append(button.$el);
-	    }
+	    return button;
 	};
 
 	/**
 	 * 필요한 버튼들을 추가한다.
 	 */
 	Toolbar.prototype._initButton = function () {
+	    var _this2 = this;
+
 	    this.addButton(new _button2.default({
 	        className: 'tui-heading',
 	        event: 'openHeadingSelect',
 	        tooltip: _i18n2.default.get('Headings')
 	    }));
 
-	    this.addButton(new _button2.default({
+	    this.addButton([new _button2.default({
 	        className: 'tui-bold',
 	        command: 'Bold',
-	        tooltip: _i18n2.default.get('Bold')
-	    }));
-
-	    this.addButton(new _button2.default({
+	        tooltip: _i18n2.default.get('Bold'),
+	        state: 'bold'
+	    }), new _button2.default({
 	        className: 'tui-italic',
 	        command: 'Italic',
-	        tooltip: _i18n2.default.get('Italic')
-	    }));
-
-	    this.addButton(new _button2.default({
+	        tooltip: _i18n2.default.get('Italic'),
+	        state: 'italic'
+	    }), new _button2.default({
 	        className: 'tui-strike',
 	        command: 'Strike',
 	        text: '~',
 	        tooltip: _i18n2.default.get('Strike')
-	    }));
+	    })]);
 
-	    this.addButton(new _button2.default({
+	    this.addButton([new _button2.default({
+	        className: 'tui-ul',
+	        command: 'UL',
+	        tooltip: _i18n2.default.get('Unordered list')
+	    }), new _button2.default({
+	        className: 'tui-ol',
+	        command: 'OL',
+	        tooltip: _i18n2.default.get('Ordered list')
+	    }), new _button2.default({
+	        className: 'tui-task',
+	        command: 'Task',
+	        tooltip: _i18n2.default.get('Task')
+	    })]);
+
+	    this.addButton([new _button2.default({
 	        className: 'tui-hrline',
 	        command: 'HR',
 	        tooltip: _i18n2.default.get('Line')
-	    }));
+	    }), new _button2.default({
+	        className: 'tui-table',
+	        event: 'openPopupAddTable',
+	        tooltip: _i18n2.default.get('Insert table')
+	    })]);
+
+	    this.addButton([new _button2.default({
+	        className: 'tui-image',
+	        event: 'openPopupAddImage',
+	        tooltip: _i18n2.default.get('Insert image')
+	    }), new _button2.default({
+	        className: 'tui-link',
+	        event: 'openPopupAddLink',
+	        tooltip: _i18n2.default.get('Insert link')
+	    })]);
 
 	    this.addButton(new _button2.default({
 	        className: 'tui-quote',
 	        command: 'Blockquote',
-	        tooltip: _i18n2.default.get('Blockquote')
+	        tooltip: _i18n2.default.get('Blockquote'),
+	        state: 'quote'
 	    }));
 
-	    this.addButton(new _button2.default({
-	        className: 'tui-ul',
-	        command: 'UL',
-	        tooltip: _i18n2.default.get('Unordered list')
-	    }));
-
-	    this.addButton(new _button2.default({
-	        className: 'tui-ol',
-	        command: 'OL',
-	        tooltip: _i18n2.default.get('Ordered list')
-	    }));
-
-	    this.addButton(new _button2.default({
-	        className: 'tui-task',
-	        command: 'Task',
-	        tooltip: _i18n2.default.get('Task')
-	    }));
-
-	    this.addButton(new _button2.default({
-	        className: 'tui-table',
-	        event: 'openPopupAddTable',
-	        tooltip: _i18n2.default.get('Insert table')
-	    }));
-
-	    this.addButton(new _button2.default({
-	        className: 'tui-link',
-	        event: 'openPopupAddLink',
-	        tooltip: _i18n2.default.get('Insert link')
-	    }));
-
-	    this.addButton(new _button2.default({
+	    this.addButton([new _button2.default({
 	        className: 'tui-codeblock',
 	        command: 'CodeBlock',
 	        text: 'CB',
-	        tooltip: _i18n2.default.get('Insert codeblock')
-	    }));
-
-	    this.addButton(new _button2.default({
+	        tooltip: _i18n2.default.get('Insert codeblock'),
+	        state: 'codeBlock'
+	    }), new _button2.default({
 	        className: 'tui-code',
 	        command: 'Code',
-	        tooltip: _i18n2.default.get('Code')
-	    }));
+	        tooltip: _i18n2.default.get('Code'),
+	        state: 'code'
+	    })]);
 
-	    this.addButton(new _button2.default({
-	        className: 'tui-image',
-	        event: 'openPopupAddImage',
-	        tooltip: _i18n2.default.get('Insert image')
-	    }));
+	    this.eventManager.listen('stateChange', function (ev) {
+	        util.forEach(_this2.buttons, function (button) {
+	            if (button.state) {
+	                if (ev[button.state]) {
+	                    button.$el.addClass('active');
+	                } else {
+	                    button.$el.removeClass('active');
+	                }
+	            }
+	        });
+	    });
 	};
 
 	module.exports = Toolbar;
@@ -12034,6 +12075,7 @@
 	    this.text = options.text;
 	    this.tooltip = options.tooltip;
 	    this.style = options.style;
+	    this.state = options.state;
 	};
 
 	/**
@@ -17795,12 +17837,12 @@
 	            className: className,
 	            command: 'scrollFollowToggle',
 	            tooltip: TOOL_TIP.active,
-	            $el: $('<button class="active ' + className + ' tui-toolbar-icons" type="button"></button>')
+	            $el: $('<button class="active ' + className + '" type="button"></button>')
 	        });
 
 	        editor.getUI().toolbar.addButton(button);
 
-	        if (editor.currentMode === 'wysiwyg') {
+	        if (editor.currentMode === 'wysiwyg' || editor.mdPreviewStyle === 'tab') {
 	            button.$el.hide();
 	        }
 
@@ -17810,7 +17852,9 @@
 	        });
 
 	        editor.on('changeModeToMarkdown', function () {
-	            button.$el.show();
+	            if (editor.mdPreviewStyle !== 'tab') {
+	                button.$el.show();
+	            }
 	        });
 
 	        // Commands
@@ -17818,7 +17862,7 @@
 	            name: 'scrollFollowToggle',
 	            exec: function exec() {
 	                isActive = !isActive;
-
+	                button._onOut();
 	                if (isActive) {
 	                    button.$el.addClass('active');
 	                    button.tooltip = TOOL_TIP.active;
@@ -17826,6 +17870,7 @@
 	                    button.$el.removeClass('active');
 	                    button.tooltip = TOOL_TIP.inActive;
 	                }
+	                button._onOver();
 	            }
 	        });
 	    }
@@ -18295,11 +18340,11 @@
 
 	var FIND_HEADER_RX = /^ *(#{1,6}) +([^\n]+?) *#* *(?:\n+|$)/;
 	var FIND_LIST_RX = /^ *(\*|-|\d+\.|[*-] \[[ xX]])\s/;
-	var FIND_QUOTE_RX = /^ {0,3}(> ?)*\s/;
-	var FIND_IMAGE_RX = /!\[([^\[\]]*)]\(([^)]*)\)/g;
+	var FIND_QUOTE_RX = /^ {0,3}(> ?)+\s/;
+	var FIND_IMAGE_RX = / *!\[([^\[\]]*)]\(([^)]*)\)/;
 	var FIND_SETEXT_HEADER_RX = /^ *(?:={1,}|-{1,})\s*$/;
 	var FIND_CODEBLOCK_END_RX = /^ *(`{3,}|~{3,})[ ]*$/;
-	var FIND_CODEBLOCK_START_RX = /^ *(`{3,}|~{3,})[ \.]*(\S+)? */;
+	var FIND_CODEBLOCK_START_RX = /^ *(`{3,}|~{3,})[ .]*(\S+)? */;
 	var FIND_SPACE = /\s/g;
 
 	/**
@@ -18410,6 +18455,7 @@
 	                onCodeBlock = false,
 	                trimCapture = '';
 	            var isRightAfterImageSection = false;
+	            var codeblockStartLineIndex = void 0;
 
 	            var lineLength = this.cm.getDoc().lineCount();
 
@@ -18418,6 +18464,7 @@
 	                lineString = this.cm.getLine(i);
 	                nextLineString = this.cm.getLine(i + 1) || '';
 	                prevLineString = this.cm.getLine(i - 1) || '';
+	                var isCodeBlockEnded = this._isCodeBlockEnd(prevLineString) && codeblockStartLineIndex !== i - 1;
 
 	                if (onTable && (!lineString || !this._isTableCode(lineString))) {
 	                    onTable = false;
@@ -18425,10 +18472,12 @@
 	                    onTable = true;
 	                }
 
-	                if (onCodeBlock && this._isCodeBlockEnd(prevLineString) && !this._doFollowedLinesHaveCodeBlockEnd(i, lineLength)) {
+	                if (onCodeBlock && isCodeBlockEnded) {
 	                    onCodeBlock = false;
-	                } else if (!onCodeBlock && this._isCodeBlockStart(lineString)) {
+	                }
+	                if (!onCodeBlock && this._isCodeBlockStart(lineString)) {
 	                    onCodeBlock = this._doFollowedLinesHaveCodeBlockEnd(i, lineLength);
+	                    codeblockStartLineIndex = i;
 	                }
 
 	                // atx header
@@ -18442,7 +18491,7 @@
 	                } else if (!onCodeBlock && !onTable && this._isImage(lineString) && !this._isList(lineString) && !this._isQuote(lineString)) {
 	                    isRightAfterImageSection = true;
 	                    isSection = true;
-	                } else if (isRightAfterImageSection) {
+	                } else if (isRightAfterImageSection && lineString.length !== 0) {
 	                    isRightAfterImageSection = false;
 	                    isSection = true;
 	                }
@@ -18867,8 +18916,7 @@
 
 	    var $colorPickerContainer = $('<div />');
 
-	    var $buttonBar = $('<div><button type="button" class="te-apply-button">입력</button></div>');
-	    $buttonBar.css('margin-top', 10);
+	    var $buttonBar = $('<button type="button" class="te-apply-button">입력</button>');
 
 	    var cpOptions = {
 	        container: $colorPickerContainer[0]
@@ -18887,9 +18935,10 @@
 	    var popup = editor.getUI().createPopup({
 	        title: false,
 	        content: $colorPickerContainer,
+	        className: 'tui-popup-color',
 	        $target: editor.getUI().$el,
 	        css: {
-	            'width': 178,
+	            'width': 'auto',
 	            'position': 'absolute'
 	        }
 	    });
@@ -18908,6 +18957,7 @@
 	                'left': $button.position().left
 	            });
 	            popup.show();
+	            colorPicker.slider.toggle(true);
 	        }
 	    });
 
@@ -22601,6 +22651,7 @@
 	    'Markdown': 'Markdown',
 	    'WYSIWYG': 'WYSIWYG',
 	    'Headings': 'Headings',
+	    'Paragraph': 'Paragraph',
 	    'Bold': 'Bold',
 	    'Italic': 'Italic',
 	    'Strike': 'Strike',
@@ -22647,6 +22698,7 @@
 	    'Markdown': '마크다운',
 	    'WYSIWYG': '위지윅',
 	    'Headings': '제목크기',
+	    'Paragraph': '본문',
 	    'Bold': '굵게',
 	    'Italic': '기울임꼴',
 	    'Strike': '취소선',
@@ -22693,6 +22745,7 @@
 	    'Markdown': 'Markdown',
 	    'WYSIWYG': '所见即所得',
 	    'Headings': '标题',
+	    'Paragraph': '文本',
 	    'Bold': '加粗',
 	    'Italic': '斜体字',
 	    'Strike': '删除线',
@@ -22739,6 +22792,7 @@
 	    'Markdown': 'マークダウン',
 	    'WYSIWYG': 'WYSIWYG',
 	    'Headings': '見出し',
+	    'Paragraph': '本文',
 	    'Bold': '太字',
 	    'Italic': 'イタリック',
 	    'Strike': 'ストライク',
@@ -22785,6 +22839,7 @@
 	    'Markdown': 'Markdown',
 	    'WYSIWYG': 'WYSIWYG',
 	    'Headings': 'Koppen',
+	    'Paragraph': 'tekst',
 	    'Bold': 'Vet',
 	    'Italic': 'Cursief',
 	    'Strike': 'Doorhalen',
