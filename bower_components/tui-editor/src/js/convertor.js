@@ -6,6 +6,8 @@
 import htmlSanitizer from './htmlSanitizer';
 import taskList from './markdownItPlugins/markdownitTaskPlugin';
 import codeBlock from './markdownItPlugins/markdownitCodeBlockPlugin';
+import code from './markdownItPlugins/markdownitCodeRenderer';
+import blockQuote from './markdownItPlugins/markdownitBlockQuoteRenderer';
 import tableRenderer from './markdownItPlugins/markdownitTableRenderer';
 import htmlBlock from './markdownItPlugins/markdownitHtmlBlockRenderer';
 
@@ -18,8 +20,8 @@ const markdownitHighlight = markdownIt({
     breaks: true,
     quotes: '“”‘’',
     langPrefix: 'lang-',
-    highlight(code, type) {
-        return hljs.getLanguage(type) ? hljs.highlight(type, code).value : escape(code, false);
+    highlight(codeText, type) {
+        return hljs.getLanguage(type) ? hljs.highlight(type, codeText).value : escape(codeText, false);
     }
 });
 const markdownit = markdownIt({
@@ -30,11 +32,15 @@ const markdownit = markdownIt({
 });
 
 markdownitHighlight.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
+markdownitHighlight.block.ruler.at('code', code);
+markdownitHighlight.block.ruler.at('blockquote', blockQuote, ['paragraph', 'reference', 'list']);
 markdownitHighlight.block.ruler.at('html_block', htmlBlock, ['paragraph', 'reference', 'blockquote']);
 markdownitHighlight.use(taskList);
 markdownitHighlight.use(codeBlock);
 
 markdownit.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
+markdownit.block.ruler.at('code', code);
+markdownit.block.ruler.at('blockquote', blockQuote, ['paragraph', 'reference', 'list']);
 markdownit.block.ruler.at('html_block', htmlBlock, ['paragraph', 'reference', 'blockquote']);
 markdownit.use(taskList);
 markdownit.use(codeBlock);
@@ -60,10 +66,12 @@ class Convertor {
      * @returns {string} html text
      */
     _markdownToHtmlWithCodeHighlight(markdown) {
-        markdown = this._addLineBreaksIfNeed(markdown);
         markdown = markdown.replace(/<br>/ig, '<br data-tomark-pass>');
 
-        return markdownitHighlight.render(markdown);
+        let renderedHTML = markdownitHighlight.render(markdown);
+        renderedHTML = this._removeBrToMarkPassAttributeInCode(renderedHTML);
+
+        return renderedHTML;
     }
 
     /**
@@ -75,10 +83,33 @@ class Convertor {
      * @returns {string} html text
      */
     _markdownToHtml(markdown) {
-        markdown = this._addLineBreaksIfNeed(markdown);
         markdown = markdown.replace(/<br>/ig, '<br data-tomark-pass>');
 
-        return markdownitHighlight.render(markdown);
+        let renderedHTML = markdownitHighlight.render(markdown);
+        renderedHTML = this._removeBrToMarkPassAttributeInCode(renderedHTML);
+
+        return renderedHTML;
+    }
+
+    /**
+     * Remove BR's data-tomark-pass attribute text when br in code element
+     * @param {string} renderedHTML Rendered HTML string from markdown editor
+     * @returns {string}
+     * @private
+     */
+    _removeBrToMarkPassAttributeInCode(renderedHTML) {
+        const $wrapperDiv = $('<div />');
+
+        $wrapperDiv.html(renderedHTML);
+
+        $wrapperDiv.find('code, pre').each((i, codeOrPre) => {
+            const $code = $(codeOrPre);
+            $code.html($code.html().replace(/&lt;br data-tomark-pass&gt;/, '&lt;br&gt;'));
+        });
+
+        renderedHTML = $wrapperDiv.html();
+
+        return renderedHTML;
     }
 
     /**
@@ -127,18 +158,28 @@ class Convertor {
      * @returns {string} markdown text
      */
     toMarkdown(html) {
+        const resultArray = [];
         let markdown = toMark(this._appendAttributeForBrIfNeed(html));
         markdown = this.eventManager.emitReduce('convertorAfterHtmlToMarkdownConverted', markdown);
 
-        return markdown;
+        tui.util.forEach(markdown.split('\n'), (line, index) => {
+            const FIND_TABLE_RX = /^\|[^|]*\|/ig;
+            const FIND_CODE_RX = /`[^`]*<br>[^`]*`/ig;
+
+            if (!FIND_CODE_RX.test(line) && !FIND_TABLE_RX.test(line)) {
+                line = line.replace(/<br>/ig, '<br>\n');
+            }
+            resultArray[index] = line;
+        });
+
+        return resultArray.join('\n');
     }
 
     _appendAttributeForBrIfNeed(html) {
         const FIND_BR_RX = /<br>/ig;
         const FIND_DOUBLE_BR_RX = /<br \/><br \/>/ig;
         const FIND_PASSING_AND_NORMAL_BR_RX = /<br data-tomark-pass \/><br \/>(.)/ig;
-        const FIND_FIRST_TWO_BRS_RX =
-            /((?:[^b][^r]|[^p][^a][^s][^s]).[^/].)<br data-tomark-pass \/><br(?: data-tomark-pass)? \/>/g;
+        const FIND_FIRST_TWO_BRS_RX = /([^>])<br data-tomark-pass \/><br data-tomark-pass \/>/g;
 
         html = html.replace(FIND_BR_RX, '<br />');
 
@@ -147,7 +188,7 @@ class Convertor {
         const div = document.createElement('div');
         const $div = $(div);
         $div.html(html);
-        $div.find('pre br').each((index, node) => {
+        $div.find('pre br,code br').each((index, node) => {
             if (node.hasAttribute('data-tomark-pass')) {
                 node.removeAttribute('data-tomark-pass');
             }
@@ -160,32 +201,6 @@ class Convertor {
         html = html.replace(FIND_FIRST_TWO_BRS_RX, '$1<br /><br />');
 
         return html;
-    }
-
-    /**
-     * Add line breaks for image section process
-     * @param {string} markdown Markdown text
-     * @returns {string}
-     * @private
-     */
-    _addLineBreaksIfNeed(markdown) {
-        const FIND_IMAGE_RX = /(!\[(?:[^\[\]]*)]\((?:[^)]*)\))/g;
-        const resultArray = [];
-        tui.util.forEach(markdown.split('\n'), (line, index) => {
-            const FIND_IMAGE_IN_LIST_OR_QUOTE_RX = /^ *(?:\*|-|\d+\.|[*-] \[[ xX]])\s|(?: *> *)+/g;
-            const FIND_TABLE_RX = /^\|[^|]*\|/ig;
-            const FIND_INLINE_CODEBLOCK_RX = /^ {4}[^\s]*/ig;
-
-            if (!FIND_TABLE_RX.test(line)
-                && !FIND_IMAGE_IN_LIST_OR_QUOTE_RX.test(line)
-                && !FIND_INLINE_CODEBLOCK_RX.test(line)
-            ) {
-                line = line.replace(FIND_IMAGE_RX, '\n\n$1\n\n');
-            }
-            resultArray[index] = line;
-        });
-
-        return resultArray.join('\n');
     }
 
     /**
