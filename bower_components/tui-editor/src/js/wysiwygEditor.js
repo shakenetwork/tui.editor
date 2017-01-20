@@ -16,6 +16,8 @@ import WwCodeBlockManager from './wwCodeBlockManager';
 import SquireExt from './squireExt';
 import KeyMapper from './keyMapper';
 import WwTextObject from './wwTextObject';
+import ComponentManager from './componentManager';
+import codeBlockManager from './codeBlockManager';
 
 const keyMapper = KeyMapper.getSharedInstance();
 
@@ -39,6 +41,7 @@ const canObserveMutations = (typeof MutationObserver !== 'undefined');
  */
 class WysiwygEditor {
     constructor($el, eventManager) {
+        this.componentManager = new ComponentManager(this);
         this.eventManager = eventManager;
         this.$editorContainerEl = $el;
 
@@ -124,6 +127,24 @@ class WysiwygEditor {
         }
 
         this._keyEventHandlers[keyMap].push(handler);
+    }
+
+    /**
+     * REmove key event handler.
+     * @param {string} keyMap keyMap string
+     * @param {function} handler handler
+     */
+    removeKeyEventHandler(keyMap, handler) {
+        if (!handler) {
+            handler = keyMap;
+            keyMap = 'DEFAULT';
+        }
+
+        const handlers = this._keyEventHandlers[keyMap];
+
+        if (handlers) {
+            this._keyEventHandlers[keyMap] = handlers.filter(_handler => _handler !== handler);
+        }
     }
 
     /**
@@ -334,6 +355,7 @@ class WysiwygEditor {
             const state = {
                 bold: /(>B|>STRONG|^B$|^STRONG$)/.test(data.path),
                 italic: /(>I|>EM|^I$|^EM$)/.test(data.path),
+                strike: /(>S)/.test(data.path),
                 code: /CODE/.test(data.path),
                 codeBlock: /PRE/.test(data.path),
                 quote: /BLOCKQUOTE/.test(data.path),
@@ -672,6 +694,8 @@ class WysiwygEditor {
 
         this.editor.setHTML(html);
 
+        codeBlockManager.replaceElements(this.$editorContainerEl, false, true);
+
         this.eventManager.emit('wysiwygSetValueAfter', this);
         this.eventManager.emit('contentChangedFromWysiwyg', this);
 
@@ -691,6 +715,8 @@ class WysiwygEditor {
      * @returns {string} html
      */
     getValue() {
+        codeBlockManager.restoreElements(this.$editorContainerEl, false, true);
+
         this._prepareGetHTML();
 
         let html = this.editor.getHTML();
@@ -905,36 +931,6 @@ class WysiwygEditor {
     }
 
     /**
-     * addManager
-     * Add manager
-     * @api
-     * @memberOf WysiwygEditor
-     * @param {string} name Manager name
-     * @param {function} Manager Constructor
-     */
-    addManager(name, Manager) {
-        if (!Manager) {
-            Manager = name;
-            name = null;
-        }
-
-        const instance = new Manager(this);
-        this._managers[name || instance.name] = instance;
-    }
-
-    /**
-     * getManager
-     * Get manager by manager name
-     * @api
-     * @memberOf WysiwygEditor
-     * @param {string} name Manager name
-     * @returns {object} manager
-     */
-    getManager(name) {
-        return this._managers[name];
-    }
-
-    /**
      * Set cursor position to end
      * @api
      * @memberOf WysiwygEditor
@@ -1053,14 +1049,14 @@ class WysiwygEditor {
 
         wwe.init();
 
-        wwe.addManager(WwListManager);
-        wwe.addManager(WwTaskManager);
-        wwe.addManager(WwTableSelectionManager);
-        wwe.addManager(WwTableManager);
-        wwe.addManager(WwHrManager);
-        wwe.addManager(WwPManager);
-        wwe.addManager(WwHeadingManager);
-        wwe.addManager(WwCodeBlockManager);
+        wwe.componentManager.addManager(WwListManager);
+        wwe.componentManager.addManager(WwTaskManager);
+        wwe.componentManager.addManager(WwTableSelectionManager);
+        wwe.componentManager.addManager(WwTableManager);
+        wwe.componentManager.addManager(WwHrManager);
+        wwe.componentManager.addManager(WwPManager);
+        wwe.componentManager.addManager(WwHeadingManager);
+        wwe.componentManager.addManager(WwCodeBlockManager);
 
         return wwe;
     }

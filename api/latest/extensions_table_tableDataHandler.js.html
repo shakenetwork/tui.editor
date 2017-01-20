@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Source: extensions/table/tableDataHandler.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-jsdoc.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/tui-doc.css">
+</head>
+<body>
+<nav class="lnb" id="lnb">
+    <div class="logo" style="">
+        <img src="img/toast-ui.png" width="100%" height="100%">
+    </div>
+    <div class="title">
+        <h1><a href="index.html" class="link">Source: extensions/table/tableDataHandler.js</a></h1>
+        
+    </div>
+    <div class="search-container" id="search-container">
+        <input type="text" placeholder="Search">
+        <ul></ul>
+    </div>
+    
+    <div class="lnb-api hidden"><h3>Classes</h3><ul><li><a href="CodeBlockManager.html">CodeBlockManager</a><div class="hidden" id="CodeBlockManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="CodeBlockManager.html#.getSharedInstance">getSharedInstance</a></li><li><a href="CodeBlockManager.html#createCodeBlockHtml">createCodeBlockHtml</a></li><li><a href="CodeBlockManager.html#replaceElements">replaceElements</a></li><li><a href="CodeBlockManager.html#setElementReplacer">setElementReplacer</a></li><li><a href="CodeBlockManager.html#updateCodeTextById">updateCodeTextById</a></li></ul></div></li><li><a href="Command.html">Command</a><div class="hidden" id="Command_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="Command.html#.TYPE">TYPE</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="Command.html#.factory">factory</a></li><li><a href="Command.html#getName">getName</a></li><li><a href="Command.html#getType">getType</a></li><li><a href="Command.html#isGlobalType">isGlobalType</a></li><li><a href="Command.html#isMDType">isMDType</a></li><li><a href="Command.html#isWWType">isWWType</a></li><li><a href="Command.html#setKeyMap">setKeyMap</a></li></ul></div></li><li><a href="CommandManager.html">CommandManager</a><div class="hidden" id="CommandManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="CommandManager.html#addCommand">addCommand</a></li><li><a href="CommandManager.html#exec">exec</a></li></ul></div></li><li><a href="ComponentManager.html">ComponentManager</a><div class="hidden" id="ComponentManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="ComponentManager.html#.CommandManager.command">CommandManager.command</a></li><li><a href="ComponentManager.html#addManager">addManager</a></li><li><a href="ComponentManager.html#getManager">getManager</a></li><li><a href="ComponentManager.html#removeManager">removeManager</a></li></ul></div></li><li><a href="Convertor.html">Convertor</a><div class="hidden" id="Convertor_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="Convertor.html#.factory">factory</a></li><li><a href="Convertor.html#.getMarkdownHighlightRenderer">getMarkdownHighlightRenderer</a></li><li><a href="Convertor.html#toHTML">toHTML</a></li><li><a href="Convertor.html#toHTMLWithCodeHightlight">toHTMLWithCodeHightlight</a></li><li><a href="Convertor.html#toMarkdown">toMarkdown</a></li></ul></div></li><li><a href="EventManager.html">EventManager</a><div class="hidden" id="EventManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="EventManager.html#addEventType">addEventType</a></li><li><a href="EventManager.html#emit">emit</a></li><li><a href="EventManager.html#emitReduce">emitReduce</a></li><li><a href="EventManager.html#listen">listen</a></li><li><a href="EventManager.html#removeEventHandler">removeEventHandler</a></li></ul></div></li><li><a href="ExtManager.html">ExtManager</a><div class="hidden" id="ExtManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="ExtManager.html#applyExtension">applyExtension</a></li><li><a href="ExtManager.html#defineExtension">defineExtension</a></li></ul></div></li><li><a href="I18n.html">I18n</a><div class="hidden" id="I18n_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="I18n.html#get">get</a></li><li><a href="I18n.html#setCode">setCode</a></li><li><a href="I18n.html#setLang">setLang</a></li></ul></div></li><li><a href="ImportManager.html">ImportManager</a><div class="hidden" id="ImportManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="ImportManager.html#_decodeURL">_decodeURL</a></li></ul></div></li><li><a href="KeyMapper.html">KeyMapper</a><div class="hidden" id="KeyMapper_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="KeyMapper.html#.getSharedInstance">getSharedInstance</a></li><li><a href="KeyMapper.html#convert">convert</a></li></ul></div></li><li><a href="Layout.html">Layout</a><div class="hidden" id="Layout_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="Layout.html#changePreviewStyle">changePreviewStyle</a></li><li><a href="Layout.html#getEditorEl">getEditorEl</a></li><li><a href="Layout.html#getMdEditorContainerEl">getMdEditorContainerEl</a></li><li><a href="Layout.html#getPreviewEl">getPreviewEl</a></li><li><a href="Layout.html#getWwEditorContainerEl">getWwEditorContainerEl</a></li><li><a href="Layout.html#hide">hide</a></li><li><a href="Layout.html#init">init</a></li><li><a href="Layout.html#remove">remove</a></li><li><a href="Layout.html#show">show</a></li><li><a href="Layout.html#switchToMarkdown">switchToMarkdown</a></li><li><a href="Layout.html#switchToWYSIWYG">switchToWYSIWYG</a></li></ul></div></li><li><a href="MarkdownEditor.html">MarkdownEditor</a><div class="hidden" id="MarkdownEditor_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="MarkdownEditor.html#.factory">factory</a></li><li><a href="MarkdownEditor.html#addWidget">addWidget</a></li><li><a href="MarkdownEditor.html#blur">blur</a></li><li><a href="MarkdownEditor.html#focus">focus</a></li><li><a href="MarkdownEditor.html#getCaretPosition">getCaretPosition</a></li><li><a href="MarkdownEditor.html#getCurrentRange">getCurrentRange</a></li><li><a href="MarkdownEditor.html#getEditor">getEditor</a></li><li><a href="MarkdownEditor.html#getRange">getRange</a></li><li><a href="MarkdownEditor.html#getTextObject">getTextObject</a></li><li><a href="MarkdownEditor.html#getValue">getValue</a></li><li><a href="MarkdownEditor.html#moveCursorToEnd">moveCursorToEnd</a></li><li><a href="MarkdownEditor.html#moveCursorToStart">moveCursorToStart</a></li><li><a href="MarkdownEditor.html#remove">remove</a></li><li><a href="MarkdownEditor.html#replaceRelativeOffset">replaceRelativeOffset</a></li><li><a href="MarkdownEditor.html#replaceSelection">replaceSelection</a></li><li><a href="MarkdownEditor.html#reset">reset</a></li><li><a href="MarkdownEditor.html#scrollTop">scrollTop</a></li><li><a href="MarkdownEditor.html#setHeight">setHeight</a></li><li><a href="MarkdownEditor.html#setValue">setValue</a></li></ul></div></li><li><a href="MarkerManager.html">MarkerManager</a><div class="hidden" id="MarkerManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="MarkerManager.html#_calculateEndDiff">_calculateEndDiff</a></li><li><a href="MarkerManager.html#_calculateStartDiff">_calculateStartDiff</a></li><li><a href="MarkerManager.html#_forEachChanges">_forEachChanges</a></li><li><a href="MarkerManager.html#_getUpdateMarkersWithDiffs">_getUpdateMarkersWithDiffs</a></li><li><a href="MarkerManager.html#_makeMarkerDiffs">_makeMarkerDiffs</a></li><li><a href="MarkerManager.html#resetContent">resetContent</a></li><li><a href="MarkerManager.html#updateMarkersByContent">updateMarkersByContent</a></li></ul></div></li><li><a href="MdListManager.html">MdListManager</a><div class="hidden" id="MdListManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="MdListManager.html#.this.name">this.name</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="MdListManager.html#appendBlankLineIfNeed">appendBlankLineIfNeed</a></li><li><a href="MdListManager.html#createSortedLineRange">createSortedLineRange</a></li><li><a href="MdListManager.html#expandLineRangeIfNeed">expandLineRangeIfNeed</a></li><li><a href="MdListManager.html#isListOrParagraph">isListOrParagraph</a></li><li><a href="MdListManager.html#replaceLineText">replaceLineText</a></li></ul></div></li><li><a href="Preview.html">Preview</a><div class="hidden" id="Preview_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="Preview.html#isVisible">isVisible</a></li><li><a href="Preview.html#refresh">refresh</a></li><li><a href="Preview.html#render">render</a></li><li><a href="Preview.html#setHeight">setHeight</a></li></ul></div></li><li><a href="SectionManager.html">SectionManager</a><div class="hidden" id="SectionManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="SectionManager.html#_addNewSection">_addNewSection</a></li><li><a href="SectionManager.html#_doFollowedLinesHaveCodeBlockEnd">_doFollowedLinesHaveCodeBlockEnd</a></li><li><a href="SectionManager.html#_eachLineState">_eachLineState</a></li><li><a href="SectionManager.html#_getPreviewSections">_getPreviewSections</a></li><li><a href="SectionManager.html#_isAtxHeader">_isAtxHeader</a></li><li><a href="SectionManager.html#_isCodeBlockEnd">_isCodeBlockEnd</a></li><li><a href="SectionManager.html#_isCodeBlockStart">_isCodeBlockStart</a></li><li><a href="SectionManager.html#_isSeTextHeader">_isSeTextHeader</a></li><li><a href="SectionManager.html#_isTable">_isTable</a></li><li><a href="SectionManager.html#_isTableAligner">_isTableAligner</a></li><li><a href="SectionManager.html#_isTableCode">_isTableCode</a></li><li><a href="SectionManager.html#_makeSectionData">_makeSectionData</a></li><li><a href="SectionManager.html#_matchPreviewSectionsWithSectionlist">_matchPreviewSectionsWithSectionlist</a></li><li><a href="SectionManager.html#_updateCurrentSectionEnd">_updateCurrentSectionEnd</a></li><li><a href="SectionManager.html#getSectionList">getSectionList</a></li><li><a href="SectionManager.html#makeSectionList">makeSectionList</a></li><li><a href="SectionManager.html#sectionByLine">sectionByLine</a></li><li><a href="SectionManager.html#sectionMatch">sectionMatch</a></li></ul></div></li><li><a href="ToastUIEditor.html">ToastUIEditor</a><div class="hidden" id="ToastUIEditor_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="ToastUIEditor.html#.i18n">i18n</a></li><li><a href="ToastUIEditor.html#.markdownItRenderer">markdownItRenderer</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="ToastUIEditor.html#.defineExtension">defineExtension</a></li><li><a href="ToastUIEditor.html#.factory">factory</a></li><li><a href="ToastUIEditor.html#.getInstances">getInstances</a></li><li><a href="ToastUIEditor.html#addHook">addHook</a></li><li><a href="ToastUIEditor.html#addWidget">addWidget</a></li><li><a href="ToastUIEditor.html#afterAddedCommand">afterAddedCommand</a></li><li><a href="ToastUIEditor.html#blur">blur</a></li><li><a href="ToastUIEditor.html#changeMode">changeMode</a></li><li><a href="ToastUIEditor.html#changePreviewStyle">changePreviewStyle</a></li><li><a href="ToastUIEditor.html#contentHeight">contentHeight</a></li><li><a href="ToastUIEditor.html#exec">exec</a></li><li><a href="ToastUIEditor.html#focus">focus</a></li><li><a href="ToastUIEditor.html#getCodeMirror">getCodeMirror</a></li><li><a href="ToastUIEditor.html#getCurrentModeEditor">getCurrentModeEditor</a></li><li><a href="ToastUIEditor.html#getCurrentPreviewStyle">getCurrentPreviewStyle</a></li><li><a href="ToastUIEditor.html#getHtml">getHtml</a></li><li><a href="ToastUIEditor.html#getMarkdown">getMarkdown</a></li><li><a href="ToastUIEditor.html#getRange">getRange</a></li><li><a href="ToastUIEditor.html#getSquire">getSquire</a></li><li><a href="ToastUIEditor.html#getTextObject">getTextObject</a></li><li><a href="ToastUIEditor.html#getUI">getUI</a></li><li><a href="ToastUIEditor.html#getValue">getValue</a></li><li><a href="ToastUIEditor.html#hide">hide</a></li><li><a href="ToastUIEditor.html#isMarkdownMode">isMarkdownMode</a></li><li><a href="ToastUIEditor.html#isViewOnly">isViewOnly</a></li><li><a href="ToastUIEditor.html#isWysiwygMode">isWysiwygMode</a></li><li><a href="ToastUIEditor.html#moveCursorToEnd">moveCursorToEnd</a></li><li><a href="ToastUIEditor.html#moveCursorToStart">moveCursorToStart</a></li><li><a href="ToastUIEditor.html#off">off</a></li><li><a href="ToastUIEditor.html#on">on</a></li><li><a href="ToastUIEditor.html#remove">remove</a></li><li><a href="ToastUIEditor.html#removeHook">removeHook</a></li><li><a href="ToastUIEditor.html#reset">reset</a></li><li><a href="ToastUIEditor.html#scrollTop">scrollTop</a></li><li><a href="ToastUIEditor.html#setHtml">setHtml</a></li><li><a href="ToastUIEditor.html#setMarkdown">setMarkdown</a></li><li><a href="ToastUIEditor.html#setUI">setUI</a></li><li><a href="ToastUIEditor.html#setValue">setValue</a></li><li><a href="ToastUIEditor.html#show">show</a></li></ul></div></li><li><a href="ToastUIEditorViewOnly.html">ToastUIEditorViewOnly</a><div class="hidden" id="ToastUIEditorViewOnly_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="ToastUIEditorViewOnly.html#addHook">addHook</a></li><li><a href="ToastUIEditorViewOnly.html#isMarkdownMode">isMarkdownMode</a></li><li><a href="ToastUIEditorViewOnly.html#isViewOnly">isViewOnly</a></li><li><a href="ToastUIEditorViewOnly.html#isWysiwygMode">isWysiwygMode</a></li><li><a href="ToastUIEditorViewOnly.html#off">off</a></li><li><a href="ToastUIEditorViewOnly.html#on">on</a></li><li><a href="ToastUIEditorViewOnly.html#remove">remove</a></li><li><a href="ToastUIEditorViewOnly.html#setMarkdown">setMarkdown</a></li><li><a href="ToastUIEditorViewOnly.html#setValue">setValue</a></li></ul></div></li><li><a href="WwClipboardManager.html">WwClipboardManager</a><div class="hidden" id="WwClipboardManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="WwClipboardManager.html#init">init</a></li></ul></div></li><li><a href="WwCodeBlockManager.html">WwCodeBlockManager</a><div class="hidden" id="WwCodeBlockManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwCodeBlockManager.html#.this.name">this.name</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="WwCodeBlockManager.html#convertToCodeblock">convertToCodeblock</a></li><li><a href="WwCodeBlockManager.html#isInCodeBlock">isInCodeBlock</a></li><li><a href="WwCodeBlockManager.html#prepareToPasteOnCodeblock">prepareToPasteOnCodeblock</a></li></ul></div></li><li><a href="WwHeadingManager.html">WwHeadingManager</a><div class="hidden" id="WwHeadingManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwHeadingManager.html#.this.name">this.name</a></li></ul></div></li><li><a href="WwHrManager.html">WwHrManager</a><div class="hidden" id="WwHrManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwHrManager.html#.this.name">this.name</a></li></ul></div></li><li><a href="WwListManager.html">WwListManager</a><div class="hidden" id="WwListManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwListManager.html#.this.name">this.name</a></li></ul></div></li><li><a href="WwMergedTableManager.html">WwMergedTableManager</a><div class="hidden" id="WwMergedTableManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="WwMergedTableManager.html#prepareToTableCellStuffing">prepareToTableCellStuffing</a></li><li><a href="WwMergedTableManager.html#tableCellAppendAidForTableElement">tableCellAppendAidForTableElement</a></li></ul></div></li><li><a href="WwMergedTableSelectionManager.html">WwMergedTableSelectionManager</a><div class="hidden" id="WwMergedTableSelectionManager_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="WwMergedTableSelectionManager.html#hasSelectedBothThAndTd">hasSelectedBothThAndTd</a></li><li><a href="WwMergedTableSelectionManager.html#highlightTableCellsBy">highlightTableCellsBy</a></li><li><a href="WwMergedTableSelectionManager.html#setTableSelectionTimerIfNeed">setTableSelectionTimerIfNeed</a></li><li><a href="WwMergedTableSelectionManager.html#styleToSelectedCells">styleToSelectedCells</a></li></ul></div></li><li><a href="WwPasteContentHelper.html">WwPasteContentHelper</a><div class="hidden" id="WwPasteContentHelper_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="WwPasteContentHelper.html#preparePaste">preparePaste</a></li></ul></div></li><li><a href="WwPManager.html">WwPManager</a><div class="hidden" id="WwPManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwPManager.html#.this.name">this.name</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="WwPManager.html#_splitPtagContentLines">_splitPtagContentLines</a></li></ul></div></li><li><a href="WwTableManager.html">WwTableManager</a><div class="hidden" id="WwTableManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwTableManager.html#.this.name">this.name</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="WwTableManager.html#_changeSelectionToTargetCell">_changeSelectionToTargetCell</a></li><li><a href="WwTableManager.html#_onPaste">_onPaste</a></li><li><a href="WwTableManager.html#destroy">destroy</a></li><li><a href="WwTableManager.html#getTableIDClassName">getTableIDClassName</a></li><li><a href="WwTableManager.html#isInTable">isInTable</a></li><li><a href="WwTableManager.html#isNonTextDeleting">isNonTextDeleting</a></li><li><a href="WwTableManager.html#prepareToPasteOnTable">prepareToPasteOnTable</a></li><li><a href="WwTableManager.html#prepareToTableCellStuffing">prepareToTableCellStuffing</a></li><li><a href="WwTableManager.html#resetLastCellNode">resetLastCellNode</a></li><li><a href="WwTableManager.html#setLastCellNode">setLastCellNode</a></li><li><a href="WwTableManager.html#tableCellAppendAidForTableElement">tableCellAppendAidForTableElement</a></li><li><a href="WwTableManager.html#wrapDanglingTableCellsIntoTrIfNeed">wrapDanglingTableCellsIntoTrIfNeed</a></li><li><a href="WwTableManager.html#wrapTheadAndTbodyIntoTableIfNeed">wrapTheadAndTbodyIntoTableIfNeed</a></li><li><a href="WwTableManager.html#wrapTrsIntoTbodyIfNeed">wrapTrsIntoTbodyIfNeed</a></li></ul></div></li><li><a href="WwTableSelectionManager.html">WwTableSelectionManager</a><div class="hidden" id="WwTableSelectionManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwTableSelectionManager.html#.this.name">this.name</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="WwTableSelectionManager.html#destroy">destroy</a></li><li><a href="WwTableSelectionManager.html#getSelectionRangeFromTable">getSelectionRangeFromTable</a></li><li><a href="WwTableSelectionManager.html#highlightTableCellsBy">highlightTableCellsBy</a></li><li><a href="WwTableSelectionManager.html#removeClassAttrbuteFromAllCellsIfNeed">removeClassAttrbuteFromAllCellsIfNeed</a></li><li><a href="WwTableSelectionManager.html#setTableSelectionTimerIfNeed">setTableSelectionTimerIfNeed</a></li><li><a href="WwTableSelectionManager.html#styleToSelectedCells">styleToSelectedCells</a></li></ul></div></li><li><a href="WwTaskManager.html">WwTaskManager</a><div class="hidden" id="WwTaskManager_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="WwTaskManager.html#.this.name">this.name</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="WwTaskManager.html#formatTask">formatTask</a></li><li><a href="WwTaskManager.html#isInTaskList">isInTaskList</a></li><li><a href="WwTaskManager.html#unformatTask">unformatTask</a></li></ul></div></li><li><a href="WwTextObject.html">WwTextObject</a><div class="hidden" id="WwTextObject_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="WwTextObject.html#deleteContent">deleteContent</a></li><li><a href="WwTextObject.html#expandEndOffset">expandEndOffset</a></li><li><a href="WwTextObject.html#expandStartOffset">expandStartOffset</a></li><li><a href="WwTextObject.html#getTextContent">getTextContent</a></li><li><a href="WwTextObject.html#peekStartBeforeOffset">peekStartBeforeOffset</a></li><li><a href="WwTextObject.html#replaceContent">replaceContent</a></li><li><a href="WwTextObject.html#setEndBeforeRange">setEndBeforeRange</a></li><li><a href="WwTextObject.html#setRange">setRange</a></li></ul></div></li><li><a href="WysiwygEditor.html">WysiwygEditor</a><div class="hidden" id="WysiwygEditor_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="WysiwygEditor.html#.factory">factory</a></li><li><a href="WysiwygEditor.html#.MarkdownEditor#init">MarkdownEditor#init</a></li><li><a href="WysiwygEditor.html#addKeyEventHandler">addKeyEventHandler</a></li><li><a href="WysiwygEditor.html#addWidget">addWidget</a></li><li><a href="WysiwygEditor.html#blur">blur</a></li><li><a href="WysiwygEditor.html#breakToNewDefaultBlock">breakToNewDefaultBlock</a></li><li><a href="WysiwygEditor.html#changeBlockFormatTo">changeBlockFormatTo</a></li><li><a href="WysiwygEditor.html#findTextNodeFilter">findTextNodeFilter</a></li><li><a href="WysiwygEditor.html#focus">focus</a></li><li><a href="WysiwygEditor.html#get$Body">get$Body</a></li><li><a href="WysiwygEditor.html#getEditor">getEditor</a></li><li><a href="WysiwygEditor.html#getRange">getRange</a></li><li><a href="WysiwygEditor.html#getTextObject">getTextObject</a></li><li><a href="WysiwygEditor.html#getValue">getValue</a></li><li><a href="WysiwygEditor.html#hasFormatWithRx">hasFormatWithRx</a></li><li><a href="WysiwygEditor.html#init">init</a></li><li><a href="WysiwygEditor.html#makeEmptyBlockCurrentSelection">makeEmptyBlockCurrentSelection</a></li><li><a href="WysiwygEditor.html#moveCursorToEnd">moveCursorToEnd</a></li><li><a href="WysiwygEditor.html#moveCursorToStart">moveCursorToStart</a></li><li><a href="WysiwygEditor.html#readySilentChange">readySilentChange</a></li><li><a href="WysiwygEditor.html#remove">remove</a></li><li><a href="WysiwygEditor.html#removeKeyEventHandler">removeKeyEventHandler</a></li><li><a href="WysiwygEditor.html#replaceContentText">replaceContentText</a></li><li><a href="WysiwygEditor.html#replaceRelativeOffset">replaceRelativeOffset</a></li><li><a href="WysiwygEditor.html#replaceSelection">replaceSelection</a></li><li><a href="WysiwygEditor.html#reset">reset</a></li><li><a href="WysiwygEditor.html#restoreSavedSelection">restoreSavedSelection</a></li><li><a href="WysiwygEditor.html#saveSelection">saveSelection</a></li><li><a href="WysiwygEditor.html#scrollTop">scrollTop</a></li><li><a href="WysiwygEditor.html#setHeight">setHeight</a></li><li><a href="WysiwygEditor.html#setValue">setValue</a></li><li><a href="WysiwygEditor.html#unwrapBlockTag">unwrapBlockTag</a></li></ul></div></li><li><a href="WysiwygMarkerHelper.html">WysiwygMarkerHelper</a><div class="hidden" id="WysiwygMarkerHelper_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="WysiwygMarkerHelper.html#_extendRangeToTextNodeIfHasNone">_extendRangeToTextNodeIfHasNone</a></li><li><a href="WysiwygMarkerHelper.html#_findOffsetNode">_findOffsetNode</a></li><li><a href="WysiwygMarkerHelper.html#_getExtraInfoOfRange">_getExtraInfoOfRange</a></li><li><a href="WysiwygMarkerHelper.html#clearSelect">clearSelect</a></li><li><a href="WysiwygMarkerHelper.html#getMarkerInfoOfCurrentSelection">getMarkerInfoOfCurrentSelection</a></li><li><a href="WysiwygMarkerHelper.html#getTextContent">getTextContent</a></li><li><a href="WysiwygMarkerHelper.html#selectOffsetRange">selectOffsetRange</a></li><li><a href="WysiwygMarkerHelper.html#updateMarkerWithExtraInfo">updateMarkerWithExtraInfo</a></li></ul></div></li></ul></div>
+</nav>
+<div id="resizer"></div>
+
+<div class="main" id="main">
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview Implements tableDataHandler
+ * @author Jiung Kang(jiung.kang@nhnent.com) FE Development Lab/NHN Ent.
+ */
+
+const util = tui.util;
+
+/**
+ * Parse cell like td or th.
+ * @param {HTMLElement} cell - cell element like td or th
+ * @param {number} rowIndex - row index
+ * @param {number} colIndex - column index
+ * @returns {{
+ *   nodeName: string,
+ *   colspan: number,
+ *   rowspan: number,
+ *   content: string,
+ *   align: ?string
+ * }}
+ * @private
+ */
+function _parseCell(cell, rowIndex, colIndex) {
+    const $cell = $(cell);
+    const colspan = $cell.attr('colspan');
+    const rowspan = $cell.attr('rowspan');
+    const nodeName = cell.nodeName;
+
+    if (nodeName !== 'TH' &amp;&amp; nodeName !== 'TD') {
+        return null;
+    }
+
+    const cellData = {
+        nodeName: cell.nodeName,
+        colspan: colspan ? parseInt(colspan, 10) : 1,
+        rowspan: rowspan ? parseInt(rowspan, 10) : 1,
+        content: $cell.html(),
+        elementIndex: {
+            rowIndex,
+            colIndex
+        }
+    };
+
+    if (cell.nodeName === 'TH' &amp;&amp; cell.align) {
+        cellData.align = cell.align;
+    }
+
+    return cellData;
+}
+
+/**
+ * Add merged cell.
+ * @param {object} base - base table data
+ * @param {object} cellData - cell data
+ * @param {number} startRowIndex - start row index
+ * @param {number} startCellIndex - start cell index
+ * @private
+ */
+function _addMergedCell(base, cellData, startRowIndex, startCellIndex) {
+    const colspan = cellData.colspan;
+    const rowspan = cellData.rowspan;
+    const colMerged = colspan > 1;
+    const rowMerged = rowspan > 1;
+    const nodeName = cellData.nodeName;
+
+    if (!colMerged &amp;&amp; !rowMerged) {
+        return;
+    }
+
+    const limitRowIndex = startRowIndex + rowspan;
+    const limitCellIndex = startCellIndex + colspan;
+
+    util.range(startRowIndex, limitRowIndex).forEach(rowIndex => {
+        base[rowIndex] = base[rowIndex] || [];
+
+        util.range(startCellIndex, limitCellIndex).forEach(cellIndex => {
+            const mergedData = {
+                nodeName
+            };
+
+            if (rowIndex === startRowIndex &amp;&amp; cellIndex === startCellIndex) {
+                return;
+            }
+
+            if (colMerged) {
+                mergedData.colMergeWith = startCellIndex;
+            }
+
+            if (rowMerged) {
+                mergedData.rowMergeWith = startRowIndex;
+            }
+
+            base[rowIndex][cellIndex] = mergedData;
+        });
+    });
+}
+
+/**
+ * Create table data from jQuery table Element.
+ * @param {jQuery} $table - jQuery table element
+ * @returns {Array.&lt;Array.&lt;object>>}
+ * @ignore
+ */
+export function createTableData($table) {
+    const tableData = [];
+
+    $table.find('tr').each((rowIndex, tr) => {
+        let stackedColCount = 0;
+
+        tableData[rowIndex] = tableData[rowIndex] || [];
+
+        $(tr).children().each((colIndex, cell) => {
+            const cellData = _parseCell(cell, rowIndex, colIndex);
+
+            if (!cellData) {
+                return;
+            }
+            let dataColIndex = colIndex + stackedColCount;
+
+            while (tableData[rowIndex][dataColIndex]) {
+                dataColIndex += 1;
+                stackedColCount += 1;
+            }
+
+            tableData[rowIndex][dataColIndex] = cellData;
+            _addMergedCell(tableData, cellData, rowIndex, dataColIndex);
+        });
+    });
+
+    return tableData;
+}
+
+/**
+ * Create cell index data of table data.
+ * @param {Array.&lt;Array.&lt;object>>} tableData - table data
+ * @returns {Array.&lt;Array.&lt;object>>}
+ * @ignore
+ */
+export function createCellIndexData(tableData) {
+    const mappingData = [];
+
+    tableData.forEach((row, rowIndex) => {
+        const mappingRow = [];
+
+        row.forEach((cell, colIndex) => {
+            if (util.isUndefined(cell.colMergeWith) &amp;&amp; util.isUndefined(cell.rowMergeWith)) {
+                mappingRow.push({
+                    rowIndex,
+                    colIndex
+                });
+            }
+        });
+        mappingData.push(mappingRow);
+    });
+
+    return mappingData;
+}
+
+/**
+ * Get header aligns.
+ * @param {Array.&lt;Array.&lt;object>>} tableData - table data
+ * @returns {Array.&lt;?string>}
+ * @private
+ */
+function _getHeaderAligns(tableData) {
+    const headRowData = tableData[0];
+
+    return headRowData.map(cellData => {
+        let align;
+
+        if (util.isExisty(cellData.colMergeWith)) {
+            align = headRowData[cellData.colMergeWith].align;
+        } else {
+            align = cellData.align;
+        }
+
+        return align;
+    });
+}
+
+/**
+ * Create render data.
+ * @param {Array.&lt;object>} tableData - table data
+ * @param {Array.&lt;object>} cellIndexData - cell index data
+ * @returns {Array.&lt;Array.&lt;object>>}
+ * @ignore
+ */
+function createRenderData(tableData, cellIndexData) {
+    const headerAligns = _getHeaderAligns(tableData);
+
+    return cellIndexData.map(row => row.map(({rowIndex, colIndex}) => (util.extend({
+        align: headerAligns[colIndex]
+    }, tableData[rowIndex][colIndex]))));
+}
+
+const BASIC_CELL_CONTENT = tui.util.browser.msie ? '' : '&lt;br>';
+
+/**
+ * Create basic cell data.
+ * @param {number} rowIndex - row index
+ * @param {number} colIndex - column index
+ * @param {string} nodeName - node name
+ * @returns {{
+ *   nodeName: string,
+ *   colspan: number,
+ *   rowspan: number,
+ *   content: string
+ * }}
+ * @ignore
+ */
+function createBasicCell(rowIndex, colIndex, nodeName) {
+    return {
+        nodeName: nodeName || 'TD',
+        colspan: 1,
+        rowspan: 1,
+        content: BASIC_CELL_CONTENT,
+        elementIndex: {
+            rowIndex,
+            colIndex
+        }
+    };
+}
+
+/**
+ * Find element row index.
+ * @param {jQuery} $cell - cell jQuery element like td or th
+ * @returns {number}
+ * @ignore
+ */
+function findElementRowIndex($cell) {
+    const $tr = $cell.closest('tr');
+    let rowIndex = $tr.prevAll().length;
+
+    if ($tr.parent()[0].nodeName === 'TBODY') {
+        rowIndex += 1;
+    }
+
+    return rowIndex;
+}
+
+/**
+ * Find element col index.
+ * @param {jQuery} $cell - cell jQuery element like td or th
+ * @returns {number}
+ * @ignore
+ */
+function findElementColIndex($cell) {
+    return $cell.closest('td, th').prevAll().length;
+}
+
+
+/**
+ * Find indexes of base table data from mappin data.
+ * @param {Array.&lt;Array.&lt;object>>} cellIndexData - cell index data
+ * @param {jQuery} $cell - cell jQuery element like td or th
+ * @returns {{rowIndex: number, cellIndex: number}}
+ * @ignore
+ */
+function findCellIndex(cellIndexData, $cell) {
+    const elementRowIndex = findElementRowIndex($cell);
+    const elementColIndex = findElementColIndex($cell);
+
+    return cellIndexData[elementRowIndex][elementColIndex];
+}
+
+/**
+ * Find last index of col merged cells.
+ * @param {Array.&lt;Array.&lt;object>>} tableData - tableData data
+ * @param {number} rowIndex - row index of base data
+ * @param {number} colIndex - column index of tabld data
+ * @returns {number}
+ * @ignore
+ */
+function findRowMergedLastIndex(tableData, rowIndex, colIndex) {
+    const cellData = tableData[rowIndex][colIndex];
+    let foundRowIndex = rowIndex;
+
+    if (cellData.rowspan > 1) {
+        foundRowIndex += cellData.rowspan - 1;
+    }
+
+    return foundRowIndex;
+}
+
+/**
+ * Find last index of col merged cells.
+ * @param {Array.&lt;Array.&lt;object>>} tableData - tableData data
+ * @param {number} rowIndex - row index of base data
+ * @param {number} colIndex - column index of tabld data
+ * @returns {number}
+ * @ignore
+ */
+function findColMergedLastIndex(tableData, rowIndex, colIndex) {
+    const cellData = tableData[rowIndex][colIndex];
+    let foundColIndex = colIndex;
+
+    if (cellData.colspan > 1) {
+        foundColIndex += cellData.colspan - 1;
+    }
+
+    return foundColIndex;
+}
+
+/**
+ * Find cell element index.
+ * @param {Array.&lt;Array.&lt;object>>} tableData - tableData data
+ * @param {number} rowIndex - row index of base data
+ * @param {number} colIndex - col index of base data
+ * @returns {{rowIndex: number, colIndex: number}}
+ * @ignore
+ */
+function findElementIndex(tableData, rowIndex, colIndex) {
+    const cellData = tableData[rowIndex][colIndex];
+
+    rowIndex = util.isExisty(cellData.rowMergeWith) ? cellData.rowMergeWith : rowIndex;
+    colIndex = util.isExisty(cellData.colMergeWith) ? cellData.colMergeWith : colIndex;
+
+    return tableData[rowIndex][colIndex].elementIndex;
+}
+
+/**
+ * Find max cell count.
+ * @param {Array.&lt;Array.&lt;object>>} tableData - table data
+ * @returns {number}
+ * @private
+ */
+function _findMaxCellCount(tableData) {
+    const cellCounts = tableData.map(rowData => rowData.length);
+
+    return Math.max(...cellCounts);
+}
+
+/**
+ * Stuff cells into incomplete row.
+ * @param {Array.&lt;Array.&lt;object>>} tableData - table data
+ * @ignore
+ */
+function stuffCellsIntoIncompleteRow(tableData) {
+    const maxCellCount = _findMaxCellCount(tableData);
+
+    tableData.forEach((rowData, rowIndex) => {
+        const cellCount = rowData.length;
+        const diffCount = maxCellCount - cellCount;
+        const nodeName = rowData[0].nodeName;
+
+        util.range(cellCount, cellCount + diffCount + 1).forEach(colIndex => {
+            rowData.push(createBasicCell(rowIndex, colIndex, nodeName));
+        });
+    });
+}
+
+export default {
+    createTableData,
+    createCellIndexData,
+    createRenderData,
+    findElementRowIndex,
+    findElementColIndex,
+    findCellIndex,
+    createBasicCell,
+    findRowMergedLastIndex,
+    findColMergedLastIndex,
+    findElementIndex,
+    stuffCellsIntoIncompleteRow
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<footer>
+    <img class="logo" src="img/toast-ui.png" style="">
+    <div class="footer-text">NHN Entertainment. Frontend Development Lab</div>
+</footer>
+<script>prettyPrint();</script>
+<script src="scripts/jquery.min.js"></script>
+<script src="scripts/tui-doc.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+    <script>
+        var id = '_sub'.replace(/"/g, '_');
+        var element = document.getElementById(id); // do not use jquery selector
+
+        $(element).removeClass('hidden');
+        showLnbApi();
+    </script>
+
+</body>
+</html>

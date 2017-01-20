@@ -1,6 +1,5 @@
 {
   "name": "toMark",
-  "version": "0.0.10",
   "authors": [
     {
       "name": "Sungho Kim",
@@ -22,14 +21,15 @@
     "test",
     "tests"
   ],
-  "homepage": "https://github.com/shiren/toMark",
-  "_release": "0.0.10",
+  "homepage": "https://github.com/nhnent/toMark",
+  "version": "0.0.11",
+  "_release": "0.0.11",
   "_resolution": {
     "type": "version",
-    "tag": "0.0.10",
-    "commit": "145b2bc61bf6caad11b0b21a161f46a3c1d3fd94"
+    "tag": "0.0.11",
+    "commit": "eebec9355b70a71fd417bfaa92d96f532577f536"
   },
-  "_source": "https://github.com/shiren/toMark.git",
-  "_target": "0.0.10",
-  "_originalSource": "https://github.com/shiren/toMark.git"
+  "_source": "https://github.com/nhnent/toMark.git",
+  "_target": "0.0.11",
+  "_originalSource": "https://github.com/nhnent/toMark.git"
 }

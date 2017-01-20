@@ -24,22 +24,16 @@ const Bold = CommandManager.command('wysiwyg', /** @lends Bold */{
      */
     exec(wwe) {
         const sq = wwe.getEditor();
-        const tableSelectionManager = wwe.getManager('tableSelection');
+        const tableSelectionManager = wwe.componentManager.getManager('tableSelection');
 
         sq.focus();
 
         if (sq.hasFormat('table') && tableSelectionManager.getSelectedCells().length) {
-            tableSelectionManager.createRangeBySelectedCells();
+            tableSelectionManager.styleToSelectedCells(styleBold);
+        } else {
+            styleBold(sq);
         }
 
-        if (sq.hasFormat('b') || sq.hasFormat('strong')) {
-            sq.changeFormat(null, {tag: 'b'});
-        } else if (!sq.hasFormat('a') && !sq.hasFormat('PRE')) {
-            if (sq.hasFormat('code')) {
-                sq.changeFormat(null, {tag: 'code'});
-            }
-            sq.bold();
-        }
 
         const range = sq.getSelection();
         if (sq.hasFormat('table') && !domUtils.isTextNode(range.commonAncestorContainer)) {
@@ -49,4 +43,20 @@ const Bold = CommandManager.command('wysiwyg', /** @lends Bold */{
     }
 });
 
+/**
+ * Style bold.
+ * @param {object} sq - squire editor instance
+ */
+function styleBold(sq) {
+    if (sq.hasFormat('b') || sq.hasFormat('strong')) {
+        sq.changeFormat(null, {tag: 'b'});
+    } else if (!sq.hasFormat('a') && !sq.hasFormat('PRE')) {
+        if (sq.hasFormat('code')) {
+            sq.changeFormat(null, {tag: 'code'});
+        }
+        sq.bold();
+    }
+}
+
 module.exports = Bold;
+

@@ -29,6 +29,20 @@ class CommandManager {
 
         this._initEvent();
     }
+
+    /**
+     * You can change command before command addition by addCommandBefore event.
+     * @param {object} command - command
+     * @returns {object}
+     */
+    _addCommandBefore(command) {
+        const commandWrapper = {command};
+
+        this.base.eventManager.emit('addCommandBefore', commandWrapper);
+
+        return commandWrapper.command || command;
+    }
+
     /**
      * Add command
      * @api
@@ -40,6 +54,8 @@ class CommandManager {
         if (args.length) {
             command = CommandManager.command(command, ...args);
         }
+
+        command = this._addCommandBefore(command);
 
         const name = command.getName();
 
@@ -118,7 +134,7 @@ class CommandManager {
 /**
  * Create command by given editor type and property object
  * @api
- * @memberOf CommandManager
+ * @memberOf ComponentManager
  * @param {string} type Command type
  * @param {{name: string, keyMap: object}} props Property
  * @returns {*}
