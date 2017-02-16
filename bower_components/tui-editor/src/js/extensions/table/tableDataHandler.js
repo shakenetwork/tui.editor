@@ -98,7 +98,7 @@ function _addMergedCell(base, cellData, startRowIndex, startCellIndex) {
  * Create table data from jQuery table Element.
  * @param {jQuery} $table - jQuery table element
  * @returns {Array.<Array.<object>>}
- * @private
+ * @ignore
  */
 export function createTableData($table) {
     const tableData = [];
@@ -126,6 +126,10 @@ export function createTableData($table) {
         });
     });
 
+    if ($table[0].className) {
+        tableData.className = $table[0].className;
+    }
+
     return tableData;
 }
 
@@ -133,7 +137,7 @@ export function createTableData($table) {
  * Create cell index data of table data.
  * @param {Array.<Array.<object>>} tableData - table data
  * @returns {Array.<Array.<object>>}
- * @priavte
+ * @ignore
  */
 export function createCellIndexData(tableData) {
     const mappingData = [];
@@ -159,6 +163,7 @@ export function createCellIndexData(tableData) {
  * Get header aligns.
  * @param {Array.<Array.<object>>} tableData - table data
  * @returns {Array.<?string>}
+ * @private
  */
 function _getHeaderAligns(tableData) {
     const headRowData = tableData[0];
@@ -181,13 +186,19 @@ function _getHeaderAligns(tableData) {
  * @param {Array.<object>} tableData - table data
  * @param {Array.<object>} cellIndexData - cell index data
  * @returns {Array.<Array.<object>>}
+ * @ignore
  */
 function createRenderData(tableData, cellIndexData) {
     const headerAligns = _getHeaderAligns(tableData);
-
-    return cellIndexData.map(row => row.map(({rowIndex, colIndex}) => (util.extend({
+    const renderData = cellIndexData.map(row => row.map(({rowIndex, colIndex}) => (util.extend({
         align: headerAligns[colIndex]
     }, tableData[rowIndex][colIndex]))));
+
+    if (tableData.className) {
+        renderData.className = tableData.className;
+    }
+
+    return renderData;
 }
 
 const BASIC_CELL_CONTENT = tui.util.browser.msie ? '' : '<br>';
@@ -203,6 +214,7 @@ const BASIC_CELL_CONTENT = tui.util.browser.msie ? '' : '<br>';
  *   rowspan: number,
  *   content: string
  * }}
+ * @ignore
  */
 function createBasicCell(rowIndex, colIndex, nodeName) {
     return {
@@ -221,6 +233,7 @@ function createBasicCell(rowIndex, colIndex, nodeName) {
  * Find element row index.
  * @param {jQuery} $cell - cell jQuery element like td or th
  * @returns {number}
+ * @ignore
  */
 function findElementRowIndex($cell) {
     const $tr = $cell.closest('tr');
@@ -237,6 +250,7 @@ function findElementRowIndex($cell) {
  * Find element col index.
  * @param {jQuery} $cell - cell jQuery element like td or th
  * @returns {number}
+ * @ignore
  */
 function findElementColIndex($cell) {
     return $cell.closest('td, th').prevAll().length;
@@ -248,6 +262,7 @@ function findElementColIndex($cell) {
  * @param {Array.<Array.<object>>} cellIndexData - cell index data
  * @param {jQuery} $cell - cell jQuery element like td or th
  * @returns {{rowIndex: number, cellIndex: number}}
+ * @ignore
  */
 function findCellIndex(cellIndexData, $cell) {
     const elementRowIndex = findElementRowIndex($cell);
@@ -262,6 +277,7 @@ function findCellIndex(cellIndexData, $cell) {
  * @param {number} rowIndex - row index of base data
  * @param {number} colIndex - column index of tabld data
  * @returns {number}
+ * @ignore
  */
 function findRowMergedLastIndex(tableData, rowIndex, colIndex) {
     const cellData = tableData[rowIndex][colIndex];
@@ -280,6 +296,7 @@ function findRowMergedLastIndex(tableData, rowIndex, colIndex) {
  * @param {number} rowIndex - row index of base data
  * @param {number} colIndex - column index of tabld data
  * @returns {number}
+ * @ignore
  */
 function findColMergedLastIndex(tableData, rowIndex, colIndex) {
     const cellData = tableData[rowIndex][colIndex];
@@ -298,6 +315,7 @@ function findColMergedLastIndex(tableData, rowIndex, colIndex) {
  * @param {number} rowIndex - row index of base data
  * @param {number} colIndex - col index of base data
  * @returns {{rowIndex: number, colIndex: number}}
+ * @ignore
  */
 function findElementIndex(tableData, rowIndex, colIndex) {
     const cellData = tableData[rowIndex][colIndex];
@@ -309,33 +327,58 @@ function findElementIndex(tableData, rowIndex, colIndex) {
 }
 
 /**
- * Find max cell count.
- * @param {Array.<Array.<object>>} tableData - table data
- * @returns {number}
- * @private
- */
-function _findMaxCellCount(tableData) {
-    const cellCounts = tableData.map(rowData => rowData.length);
-
-    return Math.max(...cellCounts);
-}
-
-/**
  * Stuff cells into incomplete row.
  * @param {Array.<Array.<object>>} tableData - table data
+ * @param {number} limitIndex - limit index
+ * @ignore
  */
-function stuffCellsIntoIncompleteRow(tableData) {
-    const maxCellCount = _findMaxCellCount(tableData);
-
+function stuffCellsIntoIncompleteRow(tableData, limitIndex) {
     tableData.forEach((rowData, rowIndex) => {
-        const cellCount = rowData.length;
-        const diffCount = maxCellCount - cellCount;
+        const startIndex = rowData.length;
         const nodeName = rowData[0].nodeName;
 
-        util.range(cellCount, cellCount + diffCount + 1).forEach(colIndex => {
+        util.range(startIndex, limitIndex).forEach(colIndex => {
             rowData.push(createBasicCell(rowIndex, colIndex, nodeName));
         });
     });
+}
+
+/**
+ * Add tbody or thead of table data if need.
+ * @param {Array.<Array.<object>>} tableData - table data
+ * @returns {boolean}
+ * @ignore
+ */
+function addTbodyOrTheadIfNeed(tableData) {
+    const header = tableData[0];
+    const cellCount = header.length;
+    let added = true;
+
+    if (!cellCount && tableData[1]) {
+        util.range(0, tableData[1].length).forEach(colIndex => {
+            header.push(createBasicCell(0, colIndex, 'TH'));
+        });
+    } else if (tableData[0][0].nodeName !== 'TH') {
+        const newHeader = util.range(0, cellCount).map(colIndex => createBasicCell(0, colIndex, 'TH'));
+
+        [].concat(...tableData).forEach(cellData => {
+            if (cellData.elementIndex) {
+                cellData.elementIndex.rowIndex += 1;
+            }
+        });
+
+        tableData.unshift(newHeader);
+    } else if (tableData.length === 1) {
+        const newRow = util.range(0, cellCount).map(colIndex => (
+            createBasicCell(1, colIndex, 'TD')
+        ));
+
+        tableData.push(newRow);
+    } else {
+        added = false;
+    }
+
+    return added;
 }
 
 export default {
@@ -349,5 +392,6 @@ export default {
     findRowMergedLastIndex,
     findColMergedLastIndex,
     findElementIndex,
-    stuffCellsIntoIncompleteRow
+    stuffCellsIntoIncompleteRow,
+    addTbodyOrTheadIfNeed
 };

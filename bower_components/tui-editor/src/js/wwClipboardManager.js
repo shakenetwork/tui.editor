@@ -1,12 +1,18 @@
 /**
  * @fileoverview Implements wysiwyg editor clipboard manager
- * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
+ * @author Sungho Kim(sungho-kim@nhnent.com),
+ *         Jiung Kang(jiung.kang@nhnent.com)
+ *         FE Development Team/NHN Ent.
  */
 
 import domUtils from './domUtils';
 import WwPasteContentHelper from './wwPasteContentHelper';
+import WwClipboardHandler from './wwClipboardHandler';
+import WwPseudoClipboardHandler from './wwPseudoClipboardHandler';
+import htmlSanitizer from './htmlSanitizer';
+import i18n from './i18n';
 
-const SET_SELECTION_DELAY = 50;
+const PASTE_TABLE_BOOKMARK = 'tui-paste-table-bookmark';
 
 /**
  * WwClipboardManager
@@ -17,9 +23,17 @@ const SET_SELECTION_DELAY = 50;
  */
 class WwClipboardManager {
     constructor(wwe) {
-        this.wwe = wwe;
+        const browser = tui.util.browser;
+        const ClipboardHandler = (browser.chrome || browser.safari) ? WwClipboardHandler : WwPseudoClipboardHandler;
 
+        this.wwe = wwe;
         this._pch = new WwPasteContentHelper(this.wwe);
+        this._cbHdr = new ClipboardHandler(this.wwe, {
+            onCopyBefore: this.onCopyBefore.bind(this),
+            onCutBefore: this.onCopyBefore.bind(this),
+            onCut: this.onCut.bind(this),
+            onPaste: this.onPaste.bind(this)
+        });
     }
 
     /**
@@ -29,110 +43,205 @@ class WwClipboardManager {
      * @memberOf WwClipboardManager
      */
     init() {
-        this._initSquireEvent();
-    }
-
-    /**
-     * _initSquireEvent
-     * initialize squire events
-     * @private
-     * @memberOf WwClipboardManager
-     */
-    _initSquireEvent() {
-        this.wwe.getEditor().addEventListener('copy', ev => {
-            this.wwe.eventManager.emit('copy', {
-                source: 'wysiwyg',
-                data: ev
-            });
-
-            this._executeActionFor('copy');
-        });
-
-        this.wwe.getEditor().addEventListener('cut', ev => {
-            this.wwe.eventManager.emit('cut', {
-                source: 'wysiwyg',
-                data: ev
-            });
-
-            this._executeActionFor('cut');
-        });
-
+        // squire의 willPaste가 동작하지 않도록 처리
         this.wwe.getEditor().addEventListener('willPaste', pasteData => {
-            this._addRangeInfoAndReplaceFragmentIfNeed(pasteData);
-
-            this._pch.preparePaste(pasteData);
-
-            this.wwe.eventManager.emit('pasteBefore', {
-                source: 'wysiwyg',
-                data: pasteData
-            });
-
-            this._refineCursorWithPasteContentsIfNeed(pasteData.fragment);
-            this.wwe.postProcessForChange();
+            pasteData.preventDefault();
         });
     }
+
     /**
-     * Refine cursor position with paste contents
-     * @memberOf WwClipboardManager
-     * @param {DocumentFragment} fragment Copied contents
+     * Update copy data, when commonAncestorContainer nodeName is list type like UL or OL.
+     * @param {object} range - text range
+     * @param {jQuery} $clipboardContainer - clibpard container jQuery element
+     */
+    _updateCopyDataForListTypeIfNeed(range, $clipboardContainer) {
+        const commonAncestorNodeName = range.commonAncestorContainer.nodeName;
+        if (commonAncestorNodeName !== 'UL' && commonAncestorNodeName !== 'OL') {
+            return;
+        }
+
+        const $newParent = $(`<${commonAncestorNodeName} />`);
+        $newParent.append($clipboardContainer.html());
+        $clipboardContainer.html('');
+        $clipboardContainer.append($newParent);
+    }
+
+    /**
+     * This handler execute before copy.
+     * @param {Event} ev - clipboard event
+     */
+    onCopyBefore(ev) {
+        const editor = this.wwe.getEditor();
+
+        editor.focus();
+
+        const range = editor.getSelection().cloneRange();
+        const $clipboardContainer = $('<div />');
+
+        this._extendRange(range);
+
+        $clipboardContainer.append(range.cloneContents());
+
+        this._updateCopyDataForListTypeIfNeed(range, $clipboardContainer);
+
+        this.wwe.eventManager.emit('copyBefore', {
+            source: 'wysiwyg',
+            $clipboardContainer
+        });
+
+        this._cbHdr.setClipboardData(ev, $clipboardContainer.html(), $clipboardContainer.text());
+    }
+
+    /**
+     * This handler execute cut.
+     * @param {Event} ev - clipboard event
+     */
+    onCut(ev) {
+        this.wwe.eventManager.emit('cut', {
+            source: 'wysiwyg',
+            data: ev
+        });
+        this.wwe.debouncedPostProcessForChange();
+    }
+
+    /**
+     * Remove empty font elements.
+     * @param {jQuery} $clipboardContainer - cliboard jQuery container
+     */
+    _removeEmptyFontElement($clipboardContainer) {
+        // windows word에서 복사 붙여넣기 시 불필요 font 태그가 생성되는 경우가 있음
+        $clipboardContainer.children('font').each((index, element) => {
+            const $element = $(element);
+
+            if (!$element.text().trim()) {
+                $element.remove();
+            }
+        });
+    }
+
+    /**
+     * Prepare paste.
+     * @param {jQuery} $clipboardContainer - temporary jQuery container for clipboard contents
      * @private
      */
-    _refineCursorWithPasteContentsIfNeed(fragment) {
-        let node = fragment;
+    _preparePaste($clipboardContainer) {
+        this._removeEmptyFontElement($clipboardContainer);
+
+        $clipboardContainer.html($clipboardContainer.html().trim());
+
+        this._pch.preparePaste($clipboardContainer);
+
+        this.wwe.eventManager.emit('pasteBefore', {
+            source: 'wysiwyg',
+            $clipboardContainer
+        });
+    }
+
+    /**
+     * Focus to after table.
+     * @param {object} sq - squire editor instance
+     * @private
+     */
+    _focusToAfterTable() {
         const sq = this.wwe.getEditor();
         const range = sq.getSelection().cloneRange();
+        const $bookmarkedTable = sq.get$Body().find(`.${PASTE_TABLE_BOOKMARK}`);
 
-        if (fragment.childNodes.length !== 0 && !domUtils.isTextNode(node.firstChild)) {
-            while (node.lastChild) {
-                node = node.lastChild;
-            }
-
-            this.wwe.defer(() => {
-                sq.focus();
-
-                range.setStartAfter(node);
-                range.collapse(true);
-                sq.setSelection(range);
-            }, SET_SELECTION_DELAY);
+        if ($bookmarkedTable.length) {
+            $bookmarkedTable.removeClass(PASTE_TABLE_BOOKMARK);
+            range.setEndAfter($bookmarkedTable[0]);
+            range.collapse(false);
+            sq.setSelection(range);
         }
     }
 
     /**
-     * Check whether copied content from editor or not
-     * @memberOf WwClipboardManager
-     * @param {DocumentFragment} pasteData Copied contents
+     * Whether paste only table or not.
+     * @param {jQuery} $clipboardContainer - clibpard container
      * @returns {boolean}
      * @private
      */
-    _isCopyFromEditor(pasteData) {
-        if (!this._latestClipboardRangeInfo) {
-            return false;
-        }
+    _isPasteOnlyTable($clipboardContainer) {
+        const childNodes = $clipboardContainer[0].childNodes;
 
-        const lastestClipboardContents = this._latestClipboardRangeInfo.contents.textContent;
-
-        return lastestClipboardContents.replace(/\s/g, '') === pasteData.fragment.textContent.replace(/\s/g, '');
+        return childNodes.length === 1 && childNodes[0].nodeName === 'TABLE';
     }
+
     /**
-     * Save latest clipboard range information to _latestClipboardRangeInfo
-     * @memberOf WwClipboardManager
+     * Paste to table.
+     * @param {jQuery} $clipboardContainer - clibpard container
+     * @returns {boolean}
      * @private
      */
-    _saveLastestClipboardRangeInfo() {
-        let commonAncestorName;
-        const range = this.wwe.getEditor().getSelection().cloneRange();
-        this._extendRange(range);
+    _pasteToTable($clipboardContainer) {
+        const tableManager = this.wwe.componentManager.getManager('table');
+        const tableSelectionManager = this.wwe.componentManager.getManager('tableSelection');
+        const range = this.wwe.getEditor().getSelection();
+        let pasted = false;
 
-        if (range.commonAncestorContainer === this.wwe.get$Body()[0]) {
-            commonAncestorName = 'BODY';
-        } else {
-            commonAncestorName = range.commonAncestorContainer.tagName;
+        if (tableManager.isInTable(range)) {
+            pasted = true;
+
+            if (this._isPasteOnlyTable($clipboardContainer)) {
+                tableManager.pasteClipboardData($clipboardContainer.first());
+            } else if (tableSelectionManager.getSelectedCells().length) {
+                alert(i18n.get('Cannot paste values ​​other than a table in the cell selection state'));
+            } else {
+                pasted = false;
+            }
         }
 
-        this._latestClipboardRangeInfo = {
-            contents: range.cloneContents(),
-            commonAncestorName
-        };
+        return pasted;
+    }
+
+    /**
+     * Remove html comments.
+     * @param {string} html - html
+     * @returns {string}
+     * @private
+     */
+    _removeHtmlComments(html) {
+        return html.replace(/<!--[\s\S]*?-->/g, '');
+    }
+
+    /**
+     * This handler execute paste.
+     * @param {Event} ev - clipboard event
+     */
+    onPaste(ev) {
+        const $clipboardContainer = $('<div />');
+        let html = ev.clipboardData.getData('text/html') || ev.clipboardData.getData('text/plain');
+
+        html = this._removeHtmlComments(html).trim();
+        html = htmlSanitizer(html, true).trim();
+
+        if (!html) {
+            return;
+        }
+
+        $clipboardContainer.html(html);
+
+        this._preparePaste($clipboardContainer);
+
+        const $lastNode = $($clipboardContainer[0].childNodes).last();
+        const isLastNodeTable = $lastNode[0] && $lastNode[0].nodeName === 'TABLE';
+
+        if (isLastNodeTable) {
+            $lastNode.addClass(PASTE_TABLE_BOOKMARK);
+        }
+
+        const pastedTable = this._pasteToTable($clipboardContainer);
+
+        if (pastedTable) {
+            return;
+        }
+
+        this.wwe.getEditor().insertHTML($clipboardContainer.html());
+        this.wwe.postProcessForChange();
+
+        if (isLastNodeTable) {
+            this._focusToAfterTable();
+        }
     }
 
     /**
@@ -233,36 +342,6 @@ class WwClipboardManager {
             && range.commonAncestorContainer === range.startContainer
             && range.commonAncestorContainer === range.endContainer;
     }
-
-    /**
-     * Table cut and copy action helper for safari and IE's
-     * @param {string} [action] Boolean value for cut action
-     * @private
-     */
-    _executeActionFor(action) {
-        this._saveLastestClipboardRangeInfo();
-        if (action === 'cut') {
-            this.wwe.postProcessForChange();
-        }
-    }
-
-    /**
-     * Replace pasteData to lastClipboardRangeInfo's data
-     * @param {object} pasteData Clipboard data
-     * @private
-     */
-    _addRangeInfoAndReplaceFragmentIfNeed(pasteData) {
-        const hasRangeInfo = !!this._latestClipboardRangeInfo;
-        const savedContents = (hasRangeInfo && this._latestClipboardRangeInfo.contents);
-        const isSameContents = savedContents.textContent === pasteData.fragment.textContent;
-
-        if (hasRangeInfo) {
-            pasteData.rangeInfo = this._latestClipboardRangeInfo;
-
-            if (isSameContents) {
-                pasteData.fragment = $(savedContents).clone()[0];
-            }
-        }
-    }
 }
+
 module.exports = WwClipboardManager;

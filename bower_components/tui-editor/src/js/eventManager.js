@@ -58,6 +58,7 @@ const eventList = [
     'blur',
     'paste',
     'copy',
+    'copyBefore',
     'cut',
     'drop',
     'show',
@@ -222,6 +223,10 @@ class EventManager {
     _removeEventHandlerWithTypeInfo(type, namespace) {
         const handlersToSurvive = [];
         const eventHandlers = this.events.get(type);
+
+        if (!eventHandlers) {
+            return;
+        }
 
         eventHandlers.map(handler => {
             if (handler.namespace !== namespace) {

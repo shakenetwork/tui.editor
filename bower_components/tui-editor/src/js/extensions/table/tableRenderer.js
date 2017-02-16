@@ -9,6 +9,7 @@ import tableDataHandler from './tableDataHandler';
  * Create cell html.
  * @param {object} cell - cell data of table base data
  * @returns {string}
+ * @private
  */
 function _createCellHtml(cell) {
     let attrs = cell.colspan > 1 ? ` colspan="${cell.colspan}"` : '';
@@ -42,17 +43,18 @@ function _createTheadOrTbodyHtml(trs, wrapperNodeName) {
 
 /**
  * Create table html.
- * @param {Array.<Array.<object>>} table - table data
+ * @param {Array.<Array.<object>>} renderData - table data for render
  * @returns {string}
  * @private
  */
-function createTableHtml(table) {
-    const thead = [table[0]];
-    const tbody = table.slice(1);
+function createTableHtml(renderData) {
+    const thead = [renderData[0]];
+    const tbody = renderData.slice(1);
     const theadHtml = _createTheadOrTbodyHtml(thead, 'THEAD');
     const tbodyHtml = _createTheadOrTbodyHtml(tbody, 'TBODY');
+    const className = renderData.className ? ` class="${renderData.className}"` : '';
 
-    return `<table>${theadHtml + tbodyHtml}</table>`;
+    return `<table${className}>${theadHtml + tbodyHtml}</renderData>`;
 }
 
 /**
@@ -60,6 +62,7 @@ function createTableHtml(table) {
  * @param {jQuery} $table - table jQuery element
  * @param {Array.<Array.<object>>} tableData - table data
  * @returns {jQuery}
+ * @ignore
  */
 function replaceTable($table, tableData) {
     const cellIndexData = tableDataHandler.createCellIndexData(tableData);
@@ -76,16 +79,12 @@ function replaceTable($table, tableData) {
  * @param {squireext} sq - squire instance
  * @param {range} range - range object
  * @param {HTMLElement} targetCell - cell element for focus
- * @private
+ * @ignore
  */
 function focusToCell(sq, range, targetCell) {
     range.selectNodeContents(targetCell);
     range.collapse(true);
     sq.setSelection(range);
-
-    // TODO: 개선 필요 - undo를 두번 실행해야 동작하는 문제를 해결하기 위해 임시방편으로 처리
-    sq.undo();
-    sq.redo();
 }
 
 export default {

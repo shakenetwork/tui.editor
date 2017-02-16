@@ -11,6 +11,7 @@ import CommandManager from '../commandManager';
  * Add CodeBlock markdown syntax to markdown editor
  * @exports CodeBlock
  * @augments Command
+ * @ignore
  */
 const CodeBlock = CommandManager.command('markdown', /** @lends CodeBlock */{
     name: 'CodeBlock',
@@ -35,7 +36,6 @@ const CodeBlock = CommandManager.command('markdown', /** @lends CodeBlock */{
             replaceText += '\n``` \n\n```\n';
             rowFix = 2;
         }
-
         doc.replaceSelection(replaceText);
         cm.setCursor(doc.getCursor().line - rowFix, 0);
 
