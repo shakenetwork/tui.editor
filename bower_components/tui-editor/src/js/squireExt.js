@@ -3,11 +3,10 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
-
 import domUtils from './domUtils';
 
-const Squire = window.Squire;
-const util = tui.util;
+const {Squire} = window;
+const {util} = tui;
 
 const FIND_BLOCK_TAGNAME_RX = /\b(H[\d]|LI|P|BLOCKQUOTE|TD)\b/;
 const isIElt11 = /Trident\/[456]\./.test(navigator.userAgent);
@@ -25,6 +24,7 @@ class SquireExt extends Squire {
         super(...args);
 
         this._decorateHandlerToCancelable('copy');
+        this._decorateHandlerToCancelable(isIElt11 ? 'beforecut' : 'cut');
         this._decorateHandlerToCancelable(isIElt11 ? 'beforepaste' : 'paste');
 
         this.get$Body = () => {
@@ -37,6 +37,8 @@ class SquireExt extends Squire {
     /**
      * _decorateHandlerToCancelable
      * Decorate squire handler to cancelable cuz sometimes, we dont need squire handler process
+     * event.preventDefault() will cancel squire and browser default behavior
+     * event.squirePrevented = true will cancel squire but allow browser default behavior
      * @param {string} eventName event name
      */
     _decorateHandlerToCancelable(eventName) {
@@ -49,7 +51,7 @@ class SquireExt extends Squire {
         const handler = handlers[0].bind(this);
 
         handlers[0] = event => {
-            if (!event.defaultPrevented) {
+            if (!event.defaultPrevented && !event.squirePrevented) {
                 handler(event);
             }
         };
@@ -62,7 +64,7 @@ class SquireExt extends Squire {
             // HR은 Block으로 치지 않아서 frag에나타나지 않는다
             // 디폴트 블럭을 만들어준다.
             if (frag.childNodes.length) {
-                current = frag.childNodes[0];
+                current = frag.childNodes.item(0);
             } else {
                 current = this.createDefaultBlock();
                 frag.appendChild(current);
@@ -80,10 +82,10 @@ class SquireExt extends Squire {
 
                 // find tag
                 while (current !== frag) {
-                    tagName = current.tagName;
+                    ({tagName} = current);
 
                     if (util.isFunction(srcCondition) ? srcCondition(tagName) : (tagName === srcCondition)) {
-                        nextBlock = current.childNodes[0];
+                        nextBlock = current.childNodes.item(0);
 
                         // there is no next blocktag
                         // eslint-disable-next-line max-depth
@@ -317,17 +319,19 @@ class SquireExt extends Squire {
     }
 
     focus() {
-        const scrollTop = this.scrollTop();
-
         Squire.prototype.focus.call(this);
+    }
 
-        // In webkit, if contenteditable element focus method have been invoked when another input element has focus,
-        // contenteditable scroll to top automatically so we need scroll it back
-        if (scrollTop !== this.scrollTop()) {
-            this.scrollTop(scrollTop);
-        }
+    blockCommandShortcuts() {
+        const isMac = /Mac/.test(navigator.platform);
+        const meta = isMac ? 'meta' : 'ctrl';
+        const keys = ['b', 'i', 'u', 'shift-7', 'shift-5', 'shift-6', 'shift-8', 'shift-9', '[', ']'];
 
-        return this;
+        keys.forEach(key => {
+            this.setKeyHandler(`${meta}-${key}`, (editor, keyboardEvent) => {
+                keyboardEvent.preventDefault();
+            });
+        });
     }
 }
 

@@ -22,6 +22,8 @@ var NODE = {
  * @param {HTMLElement} node A root node that it has nodes to iterate(not iterate itself and its any siblings)
  */
 function DomRunner(node) {
+    this._normalizeTextChildren(node);
+
     this._root = node;
     this._current = node;
 }
@@ -56,7 +58,27 @@ DomRunner.prototype.next = function() {
  * @returns {HTMLElement} current node
  */
 DomRunner.prototype.getNode = function() {
+    this._normalizeTextChildren(this._current);
+
     return this._current;
+};
+
+DomRunner.prototype._normalizeTextChildren = function(node) {
+    var childNode, nextNode;
+    if (!node || node.childNodes.length < 2) {
+        return;
+    }
+
+    childNode = node.firstChild;
+    while (childNode.nextSibling) {
+        nextNode = childNode.nextSibling;
+        if (childNode.nodeType === NODE.TEXT_NODE && nextNode.nodeType === NODE.TEXT_NODE) {
+            childNode.nodeValue += nextNode.nodeValue;
+            node.removeChild(nextNode);
+        } else {
+            childNode = nextNode;
+        }
+    }
 };
 
 /**
@@ -103,4 +125,3 @@ DomRunner.prototype._getNextNode = function(current) {
 DomRunner.NODE_TYPE = NODE;
 
 module.exports = DomRunner;
-

@@ -3,7 +3,6 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
-
 import extManager from '../extManager';
 import i18n from '../i18n';
 
@@ -15,13 +14,8 @@ const decimalColorRx = /rgb\((\d+)[, ]+(\d+)[, ]+(\d+)\)/g;
 const RESET_COLOR = '#181818';
 
 extManager.defineExtension('colorSyntax', editor => {
-    let useCustomSyntax = false;
-    let preset;
-
-    if (editor.options.colorSyntax) {
-        useCustomSyntax = !!editor.options.colorSyntax.useCustomSyntax;
-        preset = editor.options.colorSyntax.preset;
-    }
+    const {colorSyntax = {}} = editor.options;
+    const {preset, useCustomSyntax = false} = colorSyntax;
 
     editor.eventManager.listen('convertorAfterMarkdownToHtmlConverted', html => {
         let replacement;
@@ -29,7 +23,8 @@ extManager.defineExtension('colorSyntax', editor => {
         if (!useCustomSyntax) {
             replacement = html;
         } else {
-            replacement = html.replace(colorSyntaxRx, (matched, p1, p2) => makeHTMLColorSyntax(p2, p1));
+            replacement
+                = html.replace(colorSyntaxRx, (matched, p1, p2) => makeHTMLColorSyntaxAndTextRange(p2, p1).result);
         }
 
         return replacement;
@@ -42,13 +37,13 @@ extManager.defineExtension('colorSyntax', editor => {
             let replacement;
 
             if (color.match(decimalColorRx)) {
-                color = changeDecColorToHex(color);
+                color = changeDecColorsToHex(color);
             }
 
             if (!useCustomSyntax) {
                 replacement = founded.replace(/ ?class="colour" ?/g, ' ').replace(decimalColorRx, color);
             } else {
-                replacement = makeCustomColorSyntax(text, color);
+                replacement = makeCustomColorSyntaxAndTextRange(text, color).result;
             }
 
             return replacement;
@@ -60,16 +55,32 @@ extManager.defineExtension('colorSyntax', editor => {
             name: 'color',
             exec(mde, color) {
                 const cm = mde.getEditor();
+                const rangeFrom = cm.getCursor('from');
+                const rangeTo = cm.getCursor('to');
+                let replacedText;
+                let replacedFrom;
 
                 if (!color) {
                     return;
                 }
 
                 if (!useCustomSyntax) {
-                    cm.replaceSelection(makeHTMLColorSyntax(cm.getSelection(), color));
+                    ({result: replacedText, from: replacedFrom}
+                        = makeHTMLColorSyntaxAndTextRange(cm.getSelection(), color));
+                    cm.replaceSelection(replacedText);
                 } else {
-                    cm.replaceSelection(makeCustomColorSyntax(cm.getSelection(), color));
+                    ({result: replacedText, from: replacedFrom}
+                        = makeCustomColorSyntaxAndTextRange(cm.getSelection(), color));
+                    cm.replaceSelection(replacedText);
                 }
+
+                cm.setSelection({
+                    line: rangeFrom.line,
+                    ch: rangeFrom.ch + replacedFrom
+                }, {
+                    line: rangeTo.line,
+                    ch: rangeFrom.line === rangeTo.line ? rangeTo.ch + replacedFrom : rangeTo.ch
+                });
 
                 mde.focus();
             }
@@ -95,7 +106,7 @@ extManager.defineExtension('colorSyntax', editor => {
                     }
                 }
 
-                sq.focus();
+                wwe.focus();
             }
         });
 
@@ -118,7 +129,7 @@ function initUI(editor, preset) {
         className,
         event: 'colorButtonClicked',
         tooltip: i18n.get('Text color')
-    }, 2);
+    }, 4);
     const $button = editor.getUI().toolbar.$el.find(`button.${className}`);
 
     const $colorPickerContainer = $('<div />');
@@ -140,6 +151,7 @@ function initUI(editor, preset) {
     $colorPickerContainer.append($buttonBar);
 
     const popup = editor.getUI().createPopup({
+        header: false,
         title: false,
         content: $colorPickerContainer,
         className: 'tui-popup-color',
@@ -160,8 +172,9 @@ function initUI(editor, preset) {
             popup.hide();
         } else {
             popup.$el.css({
-                'top': $button.position().top + $button.height() + 5,
-                'left': $button.position().left
+                'top': $button.offset().top + $button.height(),
+                'left': $button.offset().left,
+                'position': 'fixed'
             });
             popup.show();
             colorPicker.slider.toggle(true);
@@ -191,53 +204,78 @@ function initUI(editor, preset) {
 }
 
 /**
- * Make custom color syntax
- * @param {string} text Text content
- * @param {string} color Color value
- * @returns {string}
- * @ignore
+ * make custom color syntax
+ * @param {string} text - Text content
+ * @param {string} color - Color value
+ * @returns {object} - wrapped text and range(from, to)
  */
-function makeCustomColorSyntax(text, color) {
-    return `{color:${color}}${text}{color}`;
+function makeCustomColorSyntaxAndTextRange(text, color) {
+    return wrapTextAndGetRange(`{color:${color}}`, text, '{color}');
 }
 
 /**
  * Make HTML color syntax by given text content and color value
- * @param {string} text Text content
- * @param {string} color Color value
- * @returns {string}
- * @ignore
+ * @param {string} text Text - content
+ * @param {string} color Color - value
+ * @returns {object} - wrapped text and range(from, to)
  */
-function makeHTMLColorSyntax(text, color) {
-    return `<span style="color:${color}">${text}</span>`;
+function makeHTMLColorSyntaxAndTextRange(text, color) {
+    return wrapTextAndGetRange(`<span style="color:${color}">`, text, '</span>');
 }
 
 /**
- * Change decimal color value to hexadecimal color value
+ * wrap text with pre & post and return with text range
+ * @param {string} pre - text pre
+ * @param {string} text - text
+ * @param {string} post - text post
+ * @returns {object} - wrapped text and range(from, to)
+ */
+function wrapTextAndGetRange(pre, text, post) {
+    return {
+        result: `${pre}${text}${post}`,
+        from: pre.length,
+        to: pre.length + text.length
+    };
+}
+
+/**
+ * Change decimal color values to hexadecimal color value
  * @param {string} color Color value string
  * @returns {string}
  * @ignore
  */
-function changeDecColorToHex(color) {
+function changeDecColorsToHex(color) {
     return color.replace(decimalColorRx, (colorValue, r, g, b) => {
-        r = parseInt(r, 10);
-        g = parseInt(g, 10);
-        b = parseInt(b, 10);
+        const hr = changeDecColorToHex(r);
+        const hg = changeDecColorToHex(g);
+        const hb = changeDecColorToHex(b);
 
-        const colorHexValue = get2DigitNumberString(r.toString(16))
-            + get2DigitNumberString(g.toString(16))
-            + get2DigitNumberString(b.toString(16));
-
-        return `#${colorHexValue}`;
+        return `#${hr}${hg}${hb}`;
     });
 }
 
 /**
- * Get binary number string
- * @param {string} numberStr String to convert binary number
+ * change individual dec color value to hex color
+ * @param {string} color - individual color value
+ * @returns {string} - zero padded color string
+ * @ignore
+ */
+function changeDecColorToHex(color) {
+    let hexColor = parseInt(color, 10);
+    hexColor = hexColor.toString(16);
+    hexColor = doubleZeroPad(hexColor);
+
+    return hexColor;
+}
+
+/**
+ * leading 2 zeros number string
+ * @param {string} numberStr - number string
  * @returns {string}
  * @ignore
  */
-function get2DigitNumberString(numberStr) {
-    return numberStr === '0' ? '00' : numberStr;
+function doubleZeroPad(numberStr) {
+    const padded = ('00' + numberStr);
+
+    return padded.substr(padded.length - 2);
 }

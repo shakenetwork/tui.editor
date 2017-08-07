@@ -3,8 +3,8 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
-
 import CommandManager from '../commandManager';
+import {decodeURIGraceful, encodeMarkdownCharacters, escapeMarkdownCharacters} from '../importManager';
 
 /**
  * AddLink
@@ -16,9 +16,9 @@ import CommandManager from '../commandManager';
 const AddLink = CommandManager.command('markdown', /** @lends AddLink */{
     name: 'AddLink',
     /**
-     *  커맨드 핸들러
-     *  @param {MarkdownEditor} mde MarkdownEditor instance
-     *  @param {object} data data for image
+     * command handler for AddLink
+     * @param {MarkdownEditor} mde - MarkdownEditor instance
+     * @param {object} data - data for image
      */
     exec(mde, data) {
         const cm = mde.getEditor();
@@ -36,7 +36,12 @@ const AddLink = CommandManager.command('markdown', /** @lends AddLink */{
             ch: range.to.ch
         };
 
-        const replaceText = `[${data.linkText}](${data.url})`;
+        let {linkText, url} = data;
+        linkText = decodeURIGraceful(linkText);
+        linkText = escapeMarkdownCharacters(linkText);
+        url = encodeMarkdownCharacters(url);
+
+        const replaceText = `[${linkText}](${url})`;
 
         doc.replaceRange(replaceText, from, to);
 

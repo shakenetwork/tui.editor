@@ -3,7 +3,7 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
-const util = tui.util;
+const {util} = tui;
 
 const HTML_ATTR_LIST_RX = new RegExp('^(abbr|align|alt|axis|bgcolor|border|cellpadding|cellspacing|class|clear|' +
     'color|cols|compact|coords|dir|face|headers|height|hreflang|hspace|' +
@@ -40,6 +40,8 @@ const SVG_ATTR_LIST_RX = new RegExp('^(accent-height|accumulate|additive|alphabe
 function htmlSanitizer(html, needHtmlText) {
     const $html = $('<div />');
 
+    html = html.replace(/<!--[\s\S]*?-->/g, '');
+
     $html.append(html);
 
     removeUnnecessaryTags($html);
@@ -54,7 +56,7 @@ function htmlSanitizer(html, needHtmlText) {
  * @param {jQuery} $html jQuery instance
  */
 function removeUnnecessaryTags($html) {
-    $html.find('script, iframe, textarea, form, button, select, meta, style, link').remove();
+    $html.find('script, iframe, textarea, form, button, select, meta, style, link, title').remove();
 }
 
 /**
@@ -92,7 +94,7 @@ function finalizeHtml($html, needHtmlText) {
     } else {
         const frag = document.createDocumentFragment();
         const childNodes = tui.util.toArray($html[0].childNodes);
-        const length = childNodes.length;
+        const {length} = childNodes;
 
         for (let i = 0; i < length; i += 1) {
             frag.appendChild(childNodes[i]);

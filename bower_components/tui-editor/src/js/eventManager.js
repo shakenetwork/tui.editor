@@ -2,7 +2,7 @@
  * @fileoverview Implements EventManager
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
-const util = tui.util;
+const {util} = tui;
 
 const eventList = [
     'previewBeforeHook',
@@ -25,6 +25,10 @@ const eventList = [
     'openPopupAddTable',
     'openPopupTableUtils',
     'openHeadingSelect',
+    'openPopupCodeBlockLanguages',
+    'openPopupCodeBlockEditor',
+    'closePopupCodeBlockLanguages',
+    'closePopupCodeBlockEditor',
     'closeAllPopup',
     'command',
     'addCommandBefore',
@@ -42,12 +46,11 @@ const eventList = [
     'wysiwygProcessHTMLText',
     'wysiwygRangeChangeAfter',
     'wysiwygKeyEvent',
-    'replaceCodeBlockElementsBefore',
-    'pasteBefore',
     'scroll',
     'click',
     'mousedown',
     'mouseover',
+    'mouseout',
     'mouseup',
     'contextmenu',
     'keydown',
@@ -57,9 +60,13 @@ const eventList = [
     'focus',
     'blur',
     'paste',
+    'pasteBefore',
+    'willPaste',
     'copy',
     'copyBefore',
+    'copyAfter',
     'cut',
+    'cutAfter',
     'drop',
     'show',
     'hide'
@@ -78,8 +85,7 @@ class EventManager {
 
     /**
      * Listen event and bind event handler
-     * @api
-     * @memberOf EventManager
+     * @memberof EventManager
      * @param {string} typeStr Event type string
      * @param {function} handler Event handler
      */
@@ -102,8 +108,7 @@ class EventManager {
 
     /**
      * Emit event
-     * @api
-     * @memberOf EventManager
+     * @memberof EventManager
      * @param {string} eventName Event name to emit
      * @returns {Array}
      */
@@ -129,8 +134,7 @@ class EventManager {
 
     /**
      * Emit given event and return result
-     * @api
-     * @memberOf EventManager
+     * @memberof EventManager
      * @param {string} eventName Event name to emit
      * @param {string} sourceText Source text to change
      * @returns {string}
@@ -154,7 +158,7 @@ class EventManager {
 
     /**
      * Get event type and namespace
-     * @memberOf EventManager
+     * @memberof EventManager
      * @param {string} typeStr Event type name
      * @returns {{type: string, namespace: string}}
      * @private
@@ -180,8 +184,7 @@ class EventManager {
 
     /**
      * Add event type when given event not exists
-     * @api
-     * @memberOf EventManager
+     * @memberof EventManager
      * @param {string} type Event type name
      */
     addEventType(type) {
@@ -194,14 +197,16 @@ class EventManager {
 
     /**
      * Remove event handler from given event type
-     * @api
-     * @memberOf EventManager
+     * @memberof EventManager
      * @param {string} typeStr Event type name
+     * @param {function} [handler] - registered event handler
      */
-    removeEventHandler(typeStr) {
+    removeEventHandler(typeStr, handler) {
         const {type, namespace} = this._getTypeInfo(typeStr);
 
-        if (type && !namespace) {
+        if (type && handler) {
+            this._removeEventHandlerWithHandler(type, handler);
+        } else if (type && !namespace) {
             // dont use dot notation cuz eslint
             this.events['delete'](type);
         } else if (!type && namespace) {
@@ -214,8 +219,23 @@ class EventManager {
     }
 
     /**
+     * Remove event handler with event handler
+     * @param {string} type - event type name
+     * @param {function} handler - event handler
+     * @memberof EventManager
+     * @private
+     */
+    _removeEventHandlerWithHandler(type, handler) {
+        const eventHandlers = this.events.get(type) || [];
+        const handlerIndex = eventHandlers.indexOf(handler);
+        if (handlerIndex >= 0) {
+            eventHandlers.splice(handlerIndex, 1);
+        }
+    }
+
+    /**
      * Remove event handler with event type information
-     * @memberOf EventManager
+     * @memberof EventManager
      * @param {string} type Event type name
      * @param {string} namespace Event namespace
      * @private

@@ -1,6 +1,8 @@
 tui.Editor.i18n.setLang(['zh', 'zh_CN'], {
     'Markdown': 'Markdown',
     'WYSIWYG': '所见即所得',
+    'Write': '编辑',
+    'Preview': '预览',
     'Headings': '标题',
     'Paragraph': '文本',
     'Bold': '加粗',
@@ -13,7 +15,7 @@ tui.Editor.i18n.setLang(['zh', 'zh_CN'], {
     'Ordered list': '有序列表',
     'Task': '任务',
     'Insert link': '插入链接',
-    'Insert codeblock': '插入代码块',
+    'Insert CodeBlock': '插入代码块',
     'Insert table': '插入表格',
     'Insert image': '插入图片',
     'Heading': '标题',
@@ -37,5 +39,6 @@ tui.Editor.i18n.setLang(['zh', 'zh_CN'], {
     'Text color': '文字色相',
     'Auto scroll enabled': '自动滚动启用',
     'Auto scroll disabled': '自动的滚动作非使用',
-    'Cannot paste values ​​other than a table in the cell selection state': '在单元格选择状态下无法粘贴表格以外的值。'
+    'Cannot paste values ​​other than a table in the cell selection state': '在单元格选择状态下无法粘贴表格以外的值。',
+    'Choose language': '选择语言'
 });

@@ -7,202 +7,209 @@ import UIController from './uicontroller';
 import Button from './button';
 import i18n from '../i18n';
 
-const util = tui.util;
+const {util} = tui;
+const TOOLBAR_BUTTON_CLASS_NAME = 'tui-toolbar-icons';
+const TOOLBAR_DIVIDER_CLASS_NAME = 'tui-toolbar-divider';
 
 /**
  * Toolbar
- * @exports Toolbar
- * @augments UIController
- * @constructor
- * @class
- * @param {EventManager} eventManager 이벤트 매니저
- * @ignore
+ * @class Toolbar
+ * @extends {UIController}
  */
-function Toolbar(eventManager) {
-    UIController.call(this, {
-        tagName: 'div',
-        className: 'tui-editor-defaultUI-toolbar'
-    });
+class Toolbar extends UIController {
 
-    this.buttons = [];
-
-    this.eventManager = eventManager;
-
-    this.render();
-    this._initButton();
-}
-
-Toolbar.prototype = util.extend(
-    {},
-    UIController.prototype
-);
-
-/**
- * render
- * Render toolbar
- */
-Toolbar.prototype.render = function() {
-    this.$buttonContainer = this.$el;
-};
-
-/**
- * 버튼을 추가한다
- * @param {Button} buttons 버튼
- * @param {Number} index 버튼위치 (optional)
- */
-Toolbar.prototype.addButton = function(buttons, index) {
-    const TOOLBAR_GROUP_CLASS_NAME = 'tui-toolbar-button-group';
-    const $buttonWrap = $(`<div class="${TOOLBAR_GROUP_CLASS_NAME}"></div>`);
-
-    if (util.isArray(buttons)) {
-        util.forEach(buttons, button => {
-            $buttonWrap.append(this._setButton(button).$el);
+    /**
+     * Creates an instance of Toolbar.
+     * @param {EventManager} eventManager - event manager
+     * @memberof Toolbar
+     */
+    constructor(eventManager) {
+        super({
+            tagName: 'div',
+            className: 'tui-editor-defaultUI-toolbar'
         });
-    } else {
-        $buttonWrap.append(this._setButton(buttons).$el);
+
+        this.buttons = [];
+
+        this.eventManager = eventManager;
+
+        this._render();
+        this._initButton(['heading', 'bold', 'italic', 'strike', '|', 'hr', 'quote', 'ul', 'ol',
+            'task', '|', 'table', 'image', 'link', '|', 'code', 'codeBlock']);
+
+        this.eventManager.listen('stateChange', ev => {
+            util.forEach(this.buttons, button => {
+                if (button._state) {
+                    if (ev[button._state]) {
+                        button.$el.addClass('active');
+                    } else {
+                        button.$el.removeClass('active');
+                    }
+                }
+            });
+        });
     }
 
-    if (index) {
-        this.$buttonContainer.find(`.${TOOLBAR_GROUP_CLASS_NAME}`).eq(index - 1).after($buttonWrap);
-    } else {
-        this.$buttonContainer.append($buttonWrap);
-    }
-};
-
-/**
- * 버튼에 이벤트 바인딩
- * @param {Button} button 버튼
- * @returns {Button}
- */
-Toolbar.prototype._setButton = function(button) {
-    const ev = this.eventManager;
-    if (!button.render) {
-        button = new Button(button);
+    /**
+     * render
+     * Render toolbar
+     */
+    _render() {
+        this.$buttonContainer = this.$el;
     }
 
-    button.on('command', function emitCommandEvent($, commandName) {
-        ev.emit('command', commandName);
-    });
-
-    button.on('event', function emitEventByCommand($, eventName) {
-        ev.emit(eventName);
-    });
-
-    this.buttons.push(button);
-
-    return button;
-};
-
-/**
- * 필요한 버튼들을 추가한다.
- */
-Toolbar.prototype._initButton = function() {
-    this.addButton(new Button({
-        className: 'tui-heading',
-        event: 'openHeadingSelect',
-        tooltip: i18n.get('Headings')
-    }));
-
-    this.addButton([
-        new Button({
-            className: 'tui-bold',
-            command: 'Bold',
-            tooltip: i18n.get('Bold'),
-            state: 'bold'
-        }),
-        new Button({
-            className: 'tui-italic',
-            command: 'Italic',
-            tooltip: i18n.get('Italic'),
-            state: 'italic'
-        }),
-        new Button({
-            className: 'tui-strike',
-            command: 'Strike',
-            text: '~',
-            tooltip: i18n.get('Strike'),
-            state: 'strike'
-        })
-    ]);
-
-    this.addButton([
-        new Button({
-            className: 'tui-ul',
-            command: 'UL',
-            tooltip: i18n.get('Unordered list')
-        }),
-        new Button({
-            className: 'tui-ol',
-            command: 'OL',
-            tooltip: i18n.get('Ordered list')
-        }),
-        new Button({
-            className: 'tui-task',
-            command: 'Task',
-            tooltip: i18n.get('Task')
-        })
-    ]);
-
-    this.addButton([
-        new Button({
-            className: 'tui-hrline',
-            command: 'HR',
-            tooltip: i18n.get('Line')
-        }),
-        new Button({
-            className: 'tui-table',
-            event: 'openPopupAddTable',
-            tooltip: i18n.get('Insert table')
-        })
-    ]);
-
-    this.addButton([
-        new Button({
-            className: 'tui-image',
-            event: 'openPopupAddImage',
-            tooltip: i18n.get('Insert image')
-        }),
-        new Button({
-            className: 'tui-link',
-            event: 'openPopupAddLink',
-            tooltip: i18n.get('Insert link')
-        })
-    ]);
-
-    this.addButton(new Button({
-        className: 'tui-quote',
-        command: 'Blockquote',
-        tooltip: i18n.get('Blockquote'),
-        state: 'quote'
-    }));
-
-    this.addButton([
-        new Button({
-            className: 'tui-codeblock',
-            command: 'CodeBlock',
-            text: 'CB',
-            tooltip: i18n.get('Insert codeblock'),
-            state: 'codeBlock'
-        }),
-        new Button({
-            className: 'tui-code',
-            command: 'Code',
-            tooltip: i18n.get('Code'),
-            state: 'code'
-        })
-    ]);
-
-    this.eventManager.listen('stateChange', ev => {
-        util.forEach(this.buttons, button => {
-            if (button.state) {
-                if (ev[button.state]) {
-                    button.$el.addClass('active');
+    /**
+     * add button
+     * @param {Button} button - button instance
+     * @param {Number} [index] - location the button will be placed
+     * @memberof Toolbar
+     */
+    addButton(button, index) {
+        if (util.isArray(button)) {
+            let arrayIndex = button.length - 1;
+            for (; arrayIndex >= 0; arrayIndex -= 1) {
+                if (util.isNumber(index)) {
+                    this._addButton(button[arrayIndex], index);
                 } else {
-                    button.$el.removeClass('active');
+                    this._addButton(button);
                 }
             }
+        } else {
+            this._addButton(button, index);
+        }
+    }
+
+    _addButton(button, index) {
+        const $btn = this._setButton(button, index).$el;
+
+        if (util.isNumber(index)) {
+            this.$buttonContainer.find(`.${TOOLBAR_BUTTON_CLASS_NAME}`).eq(index - 1).before($btn);
+        } else {
+            this.$buttonContainer.append($btn);
+        }
+    }
+
+    /**
+     * add divider
+     * @returns {jQuery} - created divider jquery element
+     * @memberof Toolbar
+     */
+    addDivider() {
+        const $el = $(`<div class="${TOOLBAR_DIVIDER_CLASS_NAME}"></div>`);
+        this.$buttonContainer.append($el);
+
+        return $el;
+    }
+
+    _setButton(button, index) {
+        const ev = this.eventManager;
+        if (!(button instanceof Button)) {
+            button = new Button(button);
+        }
+
+        button.on('command', ($, commandName) => ev.emit('command', commandName));
+        button.on('event', ($, eventName) => ev.emit(eventName));
+        if (util.isNumber(index)) {
+            this.buttons.splice(index, 0, button);
+        } else {
+            this.buttons.push(button);
+        }
+
+        return button;
+    }
+
+    /**
+     * init button
+     * @param {Array} buttonList using button list
+     */
+    _initButton(buttonList) {
+        this.buttonOptions = {
+            heading: {
+                className: 'tui-heading',
+                event: 'openHeadingSelect',
+                tooltip: i18n.get('Headings')
+            },
+            bold: {
+                className: 'tui-bold',
+                command: 'Bold',
+                tooltip: i18n.get('Bold'),
+                state: 'bold'
+            },
+            italic: {
+                className: 'tui-italic',
+                command: 'Italic',
+                tooltip: i18n.get('Italic'),
+                state: 'italic'
+            },
+            strike: {
+                className: 'tui-strike',
+                command: 'Strike',
+                tooltip: i18n.get('Strike'),
+                state: 'strike'
+            },
+            ul: {
+                className: 'tui-ul',
+                command: 'UL',
+                tooltip: i18n.get('Unordered list')
+            },
+            ol: {
+                className: 'tui-ol',
+                command: 'OL',
+                tooltip: i18n.get('Ordered list')
+            },
+            task: {
+                className: 'tui-task',
+                command: 'Task',
+                tooltip: i18n.get('Task')
+            },
+            hr: {
+                className: 'tui-hrline',
+                command: 'HR',
+                tooltip: i18n.get('Line')
+            },
+            table: {
+                className: 'tui-table',
+                event: 'openPopupAddTable',
+                tooltip: i18n.get('Insert table')
+            },
+            image: {
+                className: 'tui-image',
+                event: 'openPopupAddImage',
+                tooltip: i18n.get('Insert image')
+            },
+            link: {
+                className: 'tui-link',
+                event: 'openPopupAddLink',
+                tooltip: i18n.get('Insert link')
+            },
+            quote: {
+                className: 'tui-quote',
+                command: 'Blockquote',
+                tooltip: i18n.get('Blockquote'),
+                state: 'quote'
+            },
+            codeBlock: {
+                className: 'tui-codeblock',
+                command: 'CodeBlock',
+                tooltip: i18n.get('Insert CodeBlock'),
+                state: 'codeBlock'
+            },
+            code: {
+                className: 'tui-code',
+                command: 'Code',
+                tooltip: i18n.get('Code'),
+                state: 'code'
+            }
+        };
+
+        util.forEach(buttonList, buttonName => {
+            if (buttonName === '|') {
+                this.addDivider();
+            } else if (this.buttonOptions[buttonName]) {
+                this.addButton(new Button(this.buttonOptions[buttonName]));
+            }
         });
-    });
-};
+    }
+}
 
 module.exports = Toolbar;

@@ -5,7 +5,7 @@ Toast UI CodeSnippet
 
 It includes several features like `class simulation`, `browser detecting`, `type checking` and +30 more.
 
-`tui-code-snippet` supports IE7+ and modern browsers and already has been used for [open source javascript components](http://github.com/nhnent/) and many commercial projects in [NHNEnt](http://www.nhnent.com/en/index.nhn) corporation.
+`tui-code-snippet` supports IE8+ and modern browsers and already has been used for [open source javascript components](http://github.com/nhnent/) and many commercial projects in [NHNEnt](http://www.nhnent.com/en/index.nhn) corporation.
 
 ## Feature
 * browser.js
@@ -52,24 +52,27 @@ It includes several features like `class simulation`, `browser detecting`, `type
 
 ## How to use CodeSnippet
 * Using CodeSnippet build file
- * Download code-snippet.js or code-snippet.min.js from [[master branch]](https://github.com/nhnent/tui.code-snippet)
+ * Download `tui-code-snippet.js` or `tui-code-snippet.min.js` from [[master branch]](https://github.com/nhnent/tui.code-snippet)
  * It's better that you do not change the file name.
 * Using the copy only the necesary parts
  * Check dependency before copy the codes
  * Use build file as you can
 
 ## Documentation
-* **API** - https://nhnent.github.io/tui.code-snippet/latest/
-* **Tutorial** - https://github.com/nhnent/fe.javascript/wiki/FE-CodeSnippet
+* API: https://nhnent.github.io/tui.code-snippet/latest/
+* Tutorial: https://github.com/nhnent/fe.javascript/wiki/FE-CodeSnippet
 
-## Tested browsers
-* browser :
-   * IE7+
+## Tested Browsers
+* browser:
+   * IE8+
    * Chrome
    * Firefox
 
 ## Download/Install
-* Bower:
-   * latest :  `bower install tui-code-snippet`
-   * each version : `bower install tui-code-snippet[#tag]`
-* Download : https://github.com/nhnent/tui.code-snippet
+* bower:
+   * Latest: `bower install tui-code-snippet`
+   * Each Version: `bower install tui-code-snippet[#tag]`
+* npm:
+   * Latest: `npm install tui-code-snippet`
+   * Each Version: `npm install tui-code-snippet[@tag]`
+* Download: https://github.com/nhnent/tui.code-snippet

@@ -10,51 +10,65 @@ import code from './markdownItPlugins/markdownitCodeRenderer';
 import blockQuote from './markdownItPlugins/markdownitBlockQuoteRenderer';
 import tableRenderer from './markdownItPlugins/markdownitTableRenderer';
 import htmlBlock from './markdownItPlugins/markdownitHtmlBlockRenderer';
-import codeBlockManager from './codeBlockManager';
+import codeBackticks from './markdownItPlugins/markdownitBackticksRenderer';
+import CodeBlockManager from './codeBlockManager';
 
-const markdownIt = window.markdownit,
-    toMark = window.toMark;
-
-const markdownitHighlight = markdownIt({
-    html: true,
-    breaks: true,
-    quotes: '“”‘’',
-    langPrefix: 'lang-',
-    highlight(codeText, type) {
-        return codeBlockManager.createCodeBlockHtml(type, codeText);
-    }
-});
-const markdownit = markdownIt({
-    html: true,
-    breaks: true,
-    quotes: '“”‘’',
-    langPrefix: 'lang-'
-});
-
-markdownitHighlight.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
-markdownitHighlight.block.ruler.at('code', code);
-markdownitHighlight.block.ruler.at('blockquote', blockQuote, ['paragraph', 'reference', 'list']);
-markdownitHighlight.block.ruler.at('html_block', htmlBlock, ['paragraph', 'reference', 'blockquote']);
-markdownitHighlight.use(taskList);
-markdownitHighlight.use(codeBlock);
-
-markdownit.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
-markdownit.block.ruler.at('code', code);
-markdownit.block.ruler.at('blockquote', blockQuote, ['paragraph', 'reference', 'list']);
-markdownit.block.ruler.at('html_block', htmlBlock, ['paragraph', 'reference', 'blockquote']);
-markdownit.use(taskList);
-markdownit.use(codeBlock);
+const {
+    toMark,
+    markdownit: MarkdownIt
+} = window;
 
 /**
  * Convertor
  * @exports Convertor
  * @constructor
  * @class Convertor
- * @param {EventManager} em EventManager instance
+ * @param {EventManager} em - EventManager instance
+ * @param {CodeBlockManager} codeBlockManager - CodeBlockManager instance
  */
 class Convertor {
     constructor(em) {
         this.eventManager = em;
+
+        this._initMarkdownIt();
+    }
+
+    _initMarkdownIt() {
+        const codeBlockManager = new CodeBlockManager();
+        this._codeBlockManager = codeBlockManager;
+        const markdownitHighlight = new MarkdownIt({
+            html: true,
+            breaks: true,
+            quotes: '“”‘’',
+            langPrefix: 'lang-',
+            highlight(codeText, type) {
+                return codeBlockManager.createCodeBlockHtml(type, codeText);
+            }
+        });
+        const markdownit = new MarkdownIt({
+            html: true,
+            breaks: true,
+            quotes: '“”‘’',
+            langPrefix: 'lang-'
+        });
+
+        markdownitHighlight.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
+        markdownitHighlight.block.ruler.at('code', code);
+        markdownitHighlight.block.ruler.at('blockquote', blockQuote, ['paragraph', 'reference', 'list']);
+        markdownitHighlight.block.ruler.at('html_block', htmlBlock, ['paragraph', 'reference', 'blockquote']);
+        markdownitHighlight.inline.ruler.at('backticks', codeBackticks);
+        markdownitHighlight.use(taskList);
+        markdownitHighlight.use(codeBlock);
+        this._markdownitHighlight = markdownitHighlight;
+
+        markdownit.block.ruler.at('table', tableRenderer, ['paragraph', 'reference']);
+        markdownit.block.ruler.at('code', code);
+        markdownit.block.ruler.at('blockquote', blockQuote, ['paragraph', 'reference', 'list']);
+        markdownit.block.ruler.at('html_block', htmlBlock, ['paragraph', 'reference', 'blockquote']);
+        markdownit.inline.ruler.at('backticks', codeBackticks);
+        markdownit.use(taskList);
+        markdownit.use(codeBlock);
+        this._markdownit = markdownit;
     }
 
     /**
@@ -67,8 +81,13 @@ class Convertor {
      */
     _markdownToHtmlWithCodeHighlight(markdown) {
         markdown = markdown.replace(/<br>/ig, '<br data-tomark-pass>');
+        // eslint-disable-next-line
+        const onerrorStripeRegex = /(<img[^>]*)(onerror\s*=\s*[\"']?[^\"']*[\"']?)(.*)/i;
+        while (onerrorStripeRegex.exec(markdown)) {
+            markdown = markdown.replace(onerrorStripeRegex, '$1$3');
+        }
 
-        let renderedHTML = markdownitHighlight.render(markdown);
+        let renderedHTML = this._markdownitHighlight.render(markdown);
         renderedHTML = this._removeBrToMarkPassAttributeInCode(renderedHTML);
 
         return renderedHTML;
@@ -84,8 +103,13 @@ class Convertor {
      */
     _markdownToHtml(markdown) {
         markdown = markdown.replace(/<br>/ig, '<br data-tomark-pass>');
+        // eslint-disable-next-line
+        const onerrorStripeRegex = /(<img[^>]*)(onerror\s*=\s*[\"']?[^\"']*[\"']?)(.*)/i;
+        while (onerrorStripeRegex.exec(markdown)) {
+            markdown = markdown.replace(onerrorStripeRegex, '$1$3');
+        }
 
-        let renderedHTML = markdownit.render(markdown);
+        let renderedHTML = this._markdownit.render(markdown);
         renderedHTML = this._removeBrToMarkPassAttributeInCode(renderedHTML);
 
         return renderedHTML;
@@ -163,8 +187,6 @@ class Convertor {
         const resultArray = [];
 
         html = this.eventManager.emitReduce('convertorBeforeHtmlToMarkdownConverted', html);
-        // markdown에서 <, > 가 \<, \>로 표시되도록 처리
-        html = html.replace(/&lt;/g, '\\&lt;').replace(/&gt;/g, '\\&gt;');
 
         let markdown = toMark(this._appendAttributeForBrIfNeed(html), toMarkOptions);
 
@@ -214,23 +236,36 @@ class Convertor {
     }
 
     /**
-     * factory
-     * Convertor factory
-     * @api
-     * @memberOf Convertor
-     * @param {EventManager} eventManager eventmanager
-     * @returns {Convertor}
+     * get markdownit with code highlight
+     * @returns {markdownit} - markdownit instance
+     * @memberof Convertor
      */
-    static factory(eventManager) {
-        return new Convertor(eventManager);
+    getMarkdownHighlightRenderer() {
+        return this._markdownitHighlight;
     }
 
     /**
-     * Return markdown-it highlight renderer
-     * @returns {markdownIt}
+     * set markdownit instance
+     * @param {markdownit} markdownitHighlight - markdownit instance
+     * @memberof Convertor
      */
-    static getMarkdownHighlightRenderer() {
-        return markdownitHighlight;
+    setMarkdownHighlightRenderer(markdownitHighlight) {
+        markdownitHighlight.set({
+            html: true,
+            breaks: true,
+            quotes: '“”‘’',
+            langPrefix: 'lang-'
+        });
+        this._markdownitHighlight = markdownitHighlight;
+    }
+
+    /**
+     * get CodeBlockManager
+     * @returns {CodeBlockManager} - CodeBlockManager instance
+     * @memberof Convertor
+     */
+    getCodeBlockManager() {
+        return this._codeBlockManager;
     }
 }
 

@@ -42,7 +42,7 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
 	 * @fileoverview Implements entry point
@@ -73,9 +73,9 @@
 	}
 
 
-/***/ },
+/***/ }),
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * @fileoverview Implements toMark
@@ -228,9 +228,9 @@
 	module.exports = toMark;
 
 
-/***/ },
+/***/ }),
 /* 2 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * @fileoverview Implements DomRunner
@@ -256,6 +256,8 @@
 	 * @param {HTMLElement} node A root node that it has nodes to iterate(not iterate itself and its any siblings)
 	 */
 	function DomRunner(node) {
+	    this._normalizeTextChildren(node);
+
 	    this._root = node;
 	    this._current = node;
 	}
@@ -290,7 +292,27 @@
 	 * @returns {HTMLElement} current node
 	 */
 	DomRunner.prototype.getNode = function() {
+	    this._normalizeTextChildren(this._current);
+
 	    return this._current;
+	};
+
+	DomRunner.prototype._normalizeTextChildren = function(node) {
+	    var childNode, nextNode;
+	    if (!node || node.childNodes.length < 2) {
+	        return;
+	    }
+
+	    childNode = node.firstChild;
+	    while (childNode.nextSibling) {
+	        nextNode = childNode.nextSibling;
+	        if (childNode.nodeType === NODE.TEXT_NODE && nextNode.nodeType === NODE.TEXT_NODE) {
+	            childNode.nodeValue += nextNode.nodeValue;
+	            node.removeChild(nextNode);
+	        } else {
+	            childNode = nextNode;
+	        }
+	    }
 	};
 
 	/**
@@ -339,10 +361,9 @@
 	module.exports = DomRunner;
 
 
-
-/***/ },
+/***/ }),
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * @fileoverview Implements toDom
@@ -399,9 +420,9 @@
 	module.exports = toDom;
 
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * @fileoverview Implements basicRenderer
@@ -431,7 +452,9 @@
 
 	        managedText = this.trim(this.getSpaceCollapsedText(node.nodeValue));
 
-	        if (this._isNeedEscape(managedText)) {
+	        if (this._isNeedEscapeHtml(managedText)) {
+	            managedText = this.escapeTextHtml(managedText);
+	        } else if (this._isNeedEscape(managedText)) {
 	            managedText = this.escapeText(managedText);
 	        }
 
@@ -497,10 +520,14 @@
 	        return '  \n';
 	    },
 	    'CODE': function(node, subContent) {
+	        var backticks, numBackticks;
 	        var res = '';
 
 	        if (!this.isEmptyText(subContent)) {
-	            res = '`' + subContent + '`';
+	            numBackticks = parseInt(node.getAttribute('data-backticks'), 10);
+	            backticks = isNaN(numBackticks) ? '`' : Array(numBackticks + 1).join('`');
+
+	            res = backticks + subContent + backticks;
 	        }
 
 	        return res;
@@ -638,9 +665,9 @@
 	module.exports = basicRenderer;
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * @fileoverview Implements Renderer
@@ -952,6 +979,20 @@
 	    return text;
 	};
 
+	/**
+	 * Backslash escape to text for html
+	 * Apply backslash escape to text
+	 * @param {string} text text be processed
+	 * @returns {string} processed text
+	 */
+	Renderer.prototype.escapeTextHtml = function(text) {
+	    text = text.replace(Renderer.markdownTextToEscapeHtmlRx, function(matched) {
+	        return '\\' + matched;
+	    });
+
+	    return text;
+	};
+
 	Renderer.markdownTextToEscapeRx = {
 	    codeblock: /(^ {4}[^\n]+\n*)+/,
 	    hr: /^ *((\* *){3,}|(- *){3,} *|(_ *){3,}) */,
@@ -970,8 +1011,11 @@
 
 	    verticalBar: /\u007C/,
 
-	    codeblockGfm: /^(`{3,})/
+	    codeblockGfm: /^(`{3,})/,
+	    codeblockTildes: /^(~{3,})/
 	};
+
+	Renderer.markdownTextToEscapeHtmlRx = /<([a-zA-Z_][a-zA-Z0-9\-\._]*)(\s|[^\\/>])*\/?>|<(\/)([a-zA-Z_][a-zA-Z0-9\-\._]*)\s*\/?>|<!--[^-]+-->|<([a-zA-Z_][a-zA-Z0-9\-\.:/]*)>/g;
 
 	Renderer.prototype._isNeedEscape = function(text) {
 	    var res = false;
@@ -986,6 +1030,10 @@
 	    }
 
 	    return res;
+	};
+
+	Renderer.prototype._isNeedEscapeHtml = function(text) {
+	    return Renderer.markdownTextToEscapeHtmlRx.test(text);
 	};
 
 	/**
@@ -1034,9 +1082,9 @@
 	module.exports = Renderer;
 
 
-/***/ },
+/***/ }),
 /* 6 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * @fileoverview Implements Github flavored markdown renderer
@@ -1198,5 +1246,5 @@
 	module.exports = gfmRenderer;
 
 
-/***/ }
+/***/ })
 /******/ ]);

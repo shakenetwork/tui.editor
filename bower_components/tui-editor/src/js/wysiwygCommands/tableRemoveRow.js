@@ -4,9 +4,7 @@
  * @author Junghwan Park(junghwan.park@nhnent.com) FE Development Team/NHN Ent.
  */
 
-
 import CommandManager from '../commandManager';
-import domUtil from '../domUtils';
 
 /**
  * RemoveRow
@@ -31,7 +29,7 @@ const RemoveRow = CommandManager.command('wysiwyg', /** @lends RemoveRow */{
         const $tr = getTrs(range, selectionMgr, $table);
         const tbodyRowLength = $table.find('tbody tr').length;
 
-        sq.focus();
+        wwe.focus();
 
         if ((sq.hasFormat('TD') || sq.hasFormat('TABLE')) && tbodyRowLength > 1) {
             sq.saveUndoState(range);
@@ -54,7 +52,7 @@ const RemoveRow = CommandManager.command('wysiwyg', /** @lends RemoveRow */{
  * @param {object} tableMgr Table manager
  */
 function focusToFirstTd(sq, range, $tr, tableMgr) {
-    const nextFocusCell = $tr.find('td')[0];
+    const nextFocusCell = $tr.find('td').get(0);
     range.setStart(nextFocusCell, 0);
     range.collapse(true);
 
@@ -96,21 +94,17 @@ function getSelectedRows(firstSelectedCell, rangeInformation, $table) {
  * @returns {jQuery}
  */
 function getTrs(range, selectionMgr, $table) {
-    const selectedCells = selectionMgr.getSelectedCells();
-    let rangeInformation, trs, startCell, endCell;
+    const $selectedCells = selectionMgr.getSelectedCells();
+    let rangeInformation, trs;
 
-    if (selectedCells.length) {
-        rangeInformation = selectionMgr.getSelectionRangeFromTable(selectedCells.first()[0],
-            selectedCells.last()[0]);
-        trs = getSelectedRows(selectedCells.first()[0], rangeInformation, $table);
+    if ($selectedCells.length) {
+        rangeInformation = selectionMgr.getSelectionRangeFromTable($selectedCells.first().get(0),
+            $selectedCells.last().get(0));
+        trs = getSelectedRows($selectedCells.first()[0], rangeInformation, $table);
     } else {
-        const startContainer = range.startContainer;
-        const endContainer = range.endContainer;
-
-        startCell = domUtil.isTextNode(startContainer) ? $(startContainer).parent('td,th')[0] : startContainer;
-        endCell = domUtil.isTextNode(endContainer) ? $(endContainer).parent('td,th')[0] : endContainer;
-        rangeInformation = selectionMgr.getSelectionRangeFromTable(startCell, endCell);
-        trs = getSelectedRows(startCell, rangeInformation, $table);
+        const cell = $(range.startContainer).closest('td,th').get(0);
+        rangeInformation = selectionMgr.getSelectionRangeFromTable(cell, cell);
+        trs = getSelectedRows(cell, rangeInformation, $table);
     }
 
     return trs;

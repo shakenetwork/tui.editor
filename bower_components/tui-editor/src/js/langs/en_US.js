@@ -1,19 +1,21 @@
 tui.Editor.i18n.setLang(['en', 'en_US'], {
     'Markdown': 'Markdown',
     'WYSIWYG': 'WYSIWYG',
+    'Write': 'Write',
+    'Preview': 'Preview',
     'Headings': 'Headings',
     'Paragraph': 'Paragraph',
     'Bold': 'Bold',
     'Italic': 'Italic',
     'Strike': 'Strike',
-    'Code': 'Code',
+    'Code': 'Inline code',
     'Line': 'Line',
     'Blockquote': 'Blockquote',
     'Unordered list': 'Unordered list',
     'Ordered list': 'Ordered list',
     'Task': 'Task',
     'Insert link': 'Insert link',
-    'Insert codeblock': 'Insert codeblock',
+    'Insert CodeBlock': 'Insert codeBlock',
     'Insert table': 'Insert table',
     'Insert image': 'Insert image',
     'Heading': 'Heading',
@@ -38,5 +40,6 @@ tui.Editor.i18n.setLang(['en', 'en_US'], {
     'Auto scroll enabled': 'Auto scroll enabled',
     'Auto scroll disabled': 'Auto scroll disabled',
     'Cannot paste values ​​other than a table in the cell selection state':
-        'Cannot paste values ​​other than a table in the cell selection state.'
+        'Cannot paste values ​​other than a table in the cell selection state.',
+    'Choose language': 'Choose language'
 });

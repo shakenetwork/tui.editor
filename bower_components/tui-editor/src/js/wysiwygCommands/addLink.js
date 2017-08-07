@@ -4,8 +4,8 @@
  * @author Junghwan Park(junghwan.park@nhnent.com) FE Development Team/NHN Ent.
  */
 
-
 const CommandManager = require('../commandManager');
+import {decodeURIGraceful, encodeMarkdownCharacters} from '../importManager';
 
 /**
  * AddLink
@@ -24,17 +24,20 @@ const AddLink = CommandManager.command('wysiwyg', /** @lends AddLink */{
      */
     exec(wwe, data) {
         const sq = wwe.getEditor();
+        let {url, linkText} = data;
+        linkText = decodeURIGraceful(linkText);
+        url = encodeMarkdownCharacters(url);
 
-        sq.focus();
+        wwe.focus();
 
         if (!sq.hasFormat('PRE')) {
             sq.removeAllFormatting();
 
             if (sq.getSelectedText()) {
-                sq.makeLink(data.url);
+                sq.makeLink(url);
             } else {
-                const link = sq.createElement('A', {href: data.url});
-                $(link).text(data.linkText);
+                const link = sq.createElement('A', {href: url});
+                $(link).text(linkText);
                 sq.insertElement(link);
             }
         }

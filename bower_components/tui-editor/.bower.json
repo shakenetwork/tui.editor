@@ -1,6 +1,5 @@
 {
   "name": "tui-editor",
-  "version": "0.12.0",
   "description": "private",
   "authors": [
     {
@@ -28,13 +27,14 @@
   ],
   "keywords": [],
   "dependencies": {
-    "tui-code-snippet": "1.2.1",
-    "codemirror": "~5.19.0",
-    "highlightjs": "~9.5.0",
+    "tui-code-snippet": "1.2.5",
+    "codemirror": "^5.25.0",
+    "highlightjs": "^9.10.0",
     "jquery": "~2.1.4",
-    "markdown-it": "^7.0.1",
-    "toMark": "https://github.com/nhnent/toMark.git#0.0.12",
-    "squire-rte": "1.6.3"
+    "markdown-it": "^8.3.1",
+    "toMark": "https://github.com/nhnent/toMark.git#0.0.17",
+    "squire-rte": "kyuwoo-choi/Squire#tui-editor-release",
+    "plantuml-encoder": "^1.2.4"
   },
   "devDependencies": {
     "tui-component-colorpicker": "~1.0.2"
@@ -44,11 +44,12 @@
     "tui-code-snippet": "1.2.1"
   },
   "homepage": "https://github.com/nhnent/tui.editor",
-  "_release": "0.12.0",
+  "version": "0.13.0",
+  "_release": "0.13.0",
   "_resolution": {
     "type": "version",
-    "tag": "0.12.0",
-    "commit": "bda419c186fb9d7634bf1a13359c328aeae02c10"
+    "tag": "0.13.0",
+    "commit": "38a3ce7d796f5955fa771b0b541b5ede1fd1f9d5"
   },
   "_source": "https://github.com/nhnent/tui.editor.git",
   "_target": "*",

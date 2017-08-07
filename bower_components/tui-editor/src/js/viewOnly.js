@@ -3,15 +3,13 @@
  * @author Sungho Kim(sungho-kim@nhnent.com) FE Development Team/NHN Ent.
  */
 
-
-import Preview from './preview';
+import MarkdownPreview from './mdPreview';
 import EventManager from './eventManager';
 import CommandManager from './commandManager';
 import extManager from './extManager';
 import Convertor from './convertor';
-import codeBlockManager from './codeBlockManager';
 
-const util = tui.util;
+const {util} = tui;
 
 const TASK_ATTR_NAME = 'data-te-task';
 const TASK_CHECKED_CLASS_NAME = 'checked';
@@ -39,7 +37,6 @@ class ToastUIEditorViewOnly {
         this.eventManager = new EventManager();
         this.commandManager = new CommandManager(this);
         this.convertor = new Convertor(this.eventManager);
-        this.codeBlockManager = codeBlockManager;
         this.toMarkOptions = null;
 
         if (this.options.hooks) {
@@ -54,7 +51,7 @@ class ToastUIEditorViewOnly {
             });
         }
 
-        this.preview = new Preview($(this.options.el), this.eventManager, this.convertor, true);
+        this.preview = new MarkdownPreview($(this.options.el), this.eventManager, this.convertor, true);
 
         this.preview.$el.on('mousedown', $.proxy(this._toggleTask, this));
 
@@ -83,9 +80,26 @@ class ToastUIEditorViewOnly {
     }
 
     /**
+     * get markdownit with code highlight instance from convertor
+     * @returns {markdownit} - markdownit instance
+     * @memberof ToastUIEditorViewOnly
+     */
+    getMarkdownHighlightRenderer() {
+        return this.convertor.getMarkdownHighlightRenderer();
+    }
+
+    /**
+     * set markdownit instance
+     * @param {markdownit} markdownitHighlight - markdownit instance
+     * @memberof ToastUIEditorViewOnly
+     */
+    setMarkdownHighlightRenderer(markdownitHighlight) {
+        this.convertor.setMarkdownHighlightRenderer(markdownitHighlight);
+    }
+
+    /**
      * Set content for preview
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @param {string} markdown Markdown text
      */
     setMarkdown(markdown) {
@@ -97,8 +111,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Set content for preview
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @param {string} markdown Markdown text
      * @deprecated
      */
@@ -108,8 +121,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Bind eventHandler to event type
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @param {string} type Event type
      * @param {function} handler Event handler
      */
@@ -119,8 +131,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Unbind eventHandler from event type
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @param {string} type Event type
      */
     off(type) {
@@ -129,8 +140,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Remove ViewOnly preview from document
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      */
     remove() {
         this.eventManager.emit('removeEditor');
@@ -144,8 +154,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Add hook to ViewOnly preview's event
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @param {string} type Event type
      * @param {function} handler Event handler
      */
@@ -156,8 +165,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Return true
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @returns {boolean}
      */
     isViewOnly() {
@@ -166,8 +174,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Return false
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @returns {boolean}
      */
     isMarkdownMode() {
@@ -176,8 +183,7 @@ class ToastUIEditorViewOnly {
 
     /**
      * Return false
-     * @api
-     * @memberOf ToastUIEditorViewOnly
+     * @memberof ToastUIEditorViewOnly
      * @returns {boolean}
      */
     isWysiwygMode() {

@@ -1,19 +1,21 @@
 tui.Editor.i18n.setLang(['ko', 'ko_KR'], {
     'Markdown': '마크다운',
     'WYSIWYG': '위지윅',
+    'Write': '편집하기',
+    'Preview': '미리보기',
     'Headings': '제목크기',
     'Paragraph': '본문',
     'Bold': '굵게',
     'Italic': '기울임꼴',
     'Strike': '취소선',
-    'Code': '코드',
+    'Code': '인라인 코드',
     'Line': '문단나눔',
     'Blockquote': '인용구',
     'Unordered list': '글머리 기호',
     'Ordered list': '번호 매기기',
     'Task': '체크박스',
     'Insert link': '링크 삽입',
-    'Insert codeblock': '코드블럭 삽입',
+    'Insert CodeBlock': '코드블럭 삽입',
     'Insert table': '표 삽입',
     'Insert image': '이미지 삽입',
     'Heading': '제목',
@@ -37,5 +39,6 @@ tui.Editor.i18n.setLang(['ko', 'ko_KR'], {
     'Text color': '글자 색상',
     'Auto scroll enabled': '자동 스크롤 켜짐',
     'Auto scroll disabled': '자동 스크롤 꺼짐',
-    'Cannot paste values ​​other than a table in the cell selection state.': '셀 선택 상태에서는 테이블 이외의 값은 붙여넣을 수 없습니다.'
+    'Cannot paste values ​​other than a table in the cell selection state.': '셀 선택 상태에서는 테이블 이외의 값은 붙여넣을 수 없습니다.',
+    'Choose language': '언어 선택'
 });

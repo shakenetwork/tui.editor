@@ -8,7 +8,7 @@ import tableDataHandler from './tableDataHandler';
 import tableRangeHandler from './tableRangeHandler';
 const TABLE_CELL_SELECTED_CLASS_NAME = 'te-cell-selected';
 
-const util = tui.util;
+const {util} = tui;
 
 /**
  * WwMergedTableSelectionManager
@@ -28,19 +28,8 @@ class WwMergedTableSelectionManager extends WwTableSelectionManager {
          * @private
          */
         this._tableData = null;
-    }
 
-    /**
-     * Set setTimeout and setInterval timer execution if table selecting situation
-     * @param {HTMLElement} selectionStart Start element
-     * @override
-     */
-    setTableSelectionTimerIfNeed(selectionStart) {
-        const isTableSelecting = $(selectionStart).parents('table').length;
-
-        if (isTableSelecting) {
-            this._isSelectionStarted = true;
-        }
+        this.mergedTableSelectionManager = true;
     }
 
     /**
@@ -78,7 +67,7 @@ class WwMergedTableSelectionManager extends WwTableSelectionManager {
      * @param {HTMLElement} selectionStart - start element
      */
     onDragStart(selectionStart) {
-        const $table = $(selectionStart).closest('table');
+        const $table = $(selectionStart).closest('[contenteditable=true] table');
         this._tableData = tableDataHandler.createTableData($table);
     }
 
@@ -98,7 +87,7 @@ class WwMergedTableSelectionManager extends WwTableSelectionManager {
     highlightTableCellsBy(selectionStart, selectionEnd) {
         const $start = $(selectionStart);
         const $end = $(selectionEnd);
-        const $table = $start.closest('table');
+        const $table = $start.closest('[contenteditable=true] table');
         const tableRange = tableRangeHandler.findSelectionRange(this._tableData, $start, $end);
 
         this.removeClassAttrbuteFromAllCellsIfNeed();
@@ -112,17 +101,19 @@ class WwMergedTableSelectionManager extends WwTableSelectionManager {
     styleToSelectedCells(onStyle) {
         const sq = this.wwe.getEditor();
         const range = sq.getSelection().cloneRange();
-        const $table = $(range.startContainer).closest('table');
+        const $table = $(range.startContainer).closest('[contenteditable=true] table');
 
         $table.find('tr').get().forEach(tr => {
-            const cells = $(tr).find(`.${TABLE_CELL_SELECTED_CLASS_NAME}`);
+            const $cells = $(tr).find(`.${TABLE_CELL_SELECTED_CLASS_NAME}`);
+            const firstSelectedCell = $cells.first().get(0);
+            const lastSelectedCell = $cells.last().get(0);
 
-            if (!cells.length) {
+            if (!$cells.length) {
                 return;
             }
 
-            range.setStart(cells.first()[0], 0);
-            range.setEnd(cells.last()[0], 1);
+            range.setStart(firstSelectedCell, 0);
+            range.setEnd(lastSelectedCell, lastSelectedCell.childNodes.length);
             sq.setSelection(range);
             onStyle(sq);
         });

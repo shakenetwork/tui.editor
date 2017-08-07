@@ -1,19 +1,21 @@
 tui.Editor.i18n.setLang(['nl', 'nl_NL'], {
     'Markdown': 'Markdown',
     'WYSIWYG': 'WYSIWYG',
+    'Write': 'Write',
+    'Preview': 'Preview',
     'Headings': 'Koppen',
     'Paragraph': 'tekst',
     'Bold': 'Vet',
     'Italic': 'Cursief',
     'Strike': 'Doorhalen',
-    'Code': 'Code',
+    'Code': 'Inline Code',
     'Line': 'Regel',
     'Blockquote': 'Citaatblok',
     'Unordered list': 'Opsomming',
     'Ordered list': 'Genummerde opsomming',
     'Task': 'Taak',
     'Insert link': 'Link invoegen',
-    'Insert codeblock': 'Codeblok toevoegen',
+    'Insert CodeBlock': 'Codeblok toevoegen',
     'Insert table': 'Tabel invoegen',
     'Insert image': 'Afbeelding invoegen',
     'Heading': 'Kop',
@@ -34,9 +36,9 @@ tui.Editor.i18n.setLang(['nl', 'nl_NL'], {
     'Align right': 'Rechts uitlijnen',
     'Remove table': 'Verwijder tabel',
     'Would you like to paste as table?': 'Wil je dit als tabel plakken?',
-    'Text color': 'tekst kleur',
-    'Auto scroll enabled': 'Auto scroll enabled',
-    'Auto scroll disabled': 'Auto scroll uitgeschakeld',
-    'Cannot paste values ​​other than a table in the cell selection state':
-        'Kan niet anders dan een tafel in de cel selectie staat waarden te plakken.'
+    'Text color': 'Tekstkleur',
+    'Auto scroll enabled': 'Autoscroll ingeschakeld',
+    'Auto scroll disabled': 'Autoscroll uitgeschakeld',
+    'Cannot paste values ​​other than a table in the cell selection state': 'Kan geen waardes anders dan de tabel in de cell plakken',
+    'Choose language': 'Kies een taal'
 });

@@ -1,14 +1,16 @@
 {
-    "name": "tui.editor github page",
-    "authors": [
-        "Sungho Kim <shirenbeat@gmail.com>"
-    ],
-    "description": "TUI Editor Demo Page",
-    "main": "index.html",
-    "license": "MIT",
-    "homepage": "nhnent.github.io/tui.editor",
-    "private": true,
-    "dependencies": {
-        "tui-editor": "https://github.com/nhnent/tui.editor.git"
-    }
+  "name": "tui.editor github page",
+  "authors": [
+    "Sungho Kim <shirenbeat@gmail.com>"
+  ],
+  "description": "TUI Editor Demo Page",
+  "main": "index.html",
+  "license": "MIT",
+  "homepage": "nhnent.github.io/tui.editor",
+  "private": true,
+  "dependencies": {
+    "tui-editor": "https://github.com/nhnent/tui.editor.git",
+    "tui-component-colorpicker": "^1.0.2",
+    "plantuml-encoder": "^1.2.4"
+  }
 }
