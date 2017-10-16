@@ -13,7 +13,6 @@ const {util} = tui;
 /**
  * AddCol
  * Add Row to selected table
- * @exports AddCol
  * @augments Command
  * @augments WysiwygCommand
  * @ignore
@@ -40,6 +39,7 @@ const AddCol = CommandManager.command('wysiwyg', /** @lends AddCol */{
         const $selectedCells = wwe.componentManager.getManager('tableSelection').getSelectedCells();
         const tableRange = tableRangeHandler.getTableSelectionRange(tableData, $selectedCells, $startContainer);
 
+        sq.saveUndoState(range);
         _addColumns(tableData, tableRange);
 
         const $newTable = tableRenderer.replaceTable($table, tableData);

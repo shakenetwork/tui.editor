@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="bower_components/tui-component-colorpicker/dist/colorpicker.min.css">
     <link rel="stylesheet" href="bower_components/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="bower_components/highlightjs/styles/github.css">
+    <link rel="stylesheet" href="bower_components/tui-chart/dist/chart.min.css">
     <link rel="stylesheet" href="bower_components/tui-editor/dist/tui-editor.css">
     <link rel="stylesheet" href="bower_components/tui-editor/dist/tui-editor-contents.css">
     <script src="bower_components/markdown-it/dist/markdown-it.js"></script>
@@ -22,6 +23,8 @@
     <script src="bower_components/highlightjs/highlight.pack.js"></script>
     <script src="bower_components/squire-rte/build/squire.js"></script>
     <script src="bower_components/plantuml-encoder/dist/plantuml-encoder.min.js"></script>
+    <script src="bower_components/raphael/raphael.min.js"></script>
+    <script src="bower_components/tui-chart/dist/chart.min.js"></script>
     <script src="bower_components/tui-editor/dist/tui-editor.min.js"></script>
     <style>
      #editSection, #editSection * {
@@ -194,7 +197,7 @@
           previewStyle: 'vertical',
           height: 400,
           initialEditType: 'markdown',
-          exts: ['scrollFollow', 'colorSyntax', 'tableExtension', 'plantUML']
+          exts: ['scrollFollow', 'colorSyntax', 'tableExtension', 'plantUML', 'chart']
       });
     </script>
   </body>

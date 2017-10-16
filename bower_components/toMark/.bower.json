@@ -22,14 +22,14 @@
     "tests"
   ],
   "homepage": "https://github.com/nhnent/toMark",
-  "version": "0.0.17",
-  "_release": "0.0.17",
+  "version": "0.0.18",
+  "_release": "0.0.18",
   "_resolution": {
     "type": "version",
-    "tag": "0.0.17",
-    "commit": "c67b6b2b8a5e254f814cf6280eda58521a338494"
+    "tag": "0.0.18",
+    "commit": "e689629de9562cf04992d8830febf2a6ccb099dd"
   },
   "_source": "https://github.com/nhnent/toMark.git",
-  "_target": "0.0.17",
+  "_target": "0.0.18",
   "_originalSource": "https://github.com/nhnent/toMark.git"
 }

@@ -34,9 +34,8 @@ const HEADER_ROW_COUNT = 1;
 const LAST_BORDER = 1;
 
 /**
- * PopupAddTable
+ * Class PopupAddTable
  * It implements Popup to add a table
- * @class PopupAddTable
  * @extends {LayerPopup}
  */
 class PopupAddTable extends LayerPopup {
@@ -125,10 +124,11 @@ class PopupAddTable extends LayerPopup {
 
         this._eventManager.listen('openPopupAddTable', () => {
             this._eventManager.emit('closeAllPopup');
+            const $button = this.$button;
+            const position = $button.position();
             this.$el.css({
-                'top': this.$button.offset().top + this.$button.height(),
-                'left': this.$button.offset().left,
-                'position': 'fixed'
+                top: position.top + $button.outerHeight(true),
+                left: position.left
             });
             this.show();
             this._selectionOffset = this.$el.find(`.${CLASS_TABLE_SELECTION}`).offset();
@@ -138,6 +138,7 @@ class PopupAddTable extends LayerPopup {
     /**
      * _cacheElements
      * Cache elements for use
+     * @private
      */
     _cacheElements() {
         this.$header = this.$el.find(`.${CLASS_TABLE_HEADER}`);
@@ -151,6 +152,7 @@ class PopupAddTable extends LayerPopup {
      * Resize table if need
      * @param {number} col column index
      * @param {number} row row index
+     * @private
      */
     _resizeTableBySelectionIfNeed(col, row) {
         const resizedBound = this._getResizedTableBound(col, row);
@@ -166,6 +168,7 @@ class PopupAddTable extends LayerPopup {
      * @param {number} col column index
      * @param {number} row row index
      * @returns {object} bound
+     * @private
      */
     _getResizedTableBound(col, row) {
         let resizedCol, resizedRow, resizedBound;
@@ -198,6 +201,7 @@ class PopupAddTable extends LayerPopup {
      * @param {number} col column index
      * @param {number} row row index
      * @returns {boolean} result
+     * @private
      */
     _isNeedResizeTable(col, row) {
         return (col && col !== this._tableBound.col)
@@ -210,6 +214,7 @@ class PopupAddTable extends LayerPopup {
      * @param {number} x offset
      * @param {number} y offset
      * @returns {object} bound
+     * @private
      */
     _getBoundByOffset(x, y) {
         const row = parseInt(y / CELL_HEIGHT, 10);
@@ -227,6 +232,7 @@ class PopupAddTable extends LayerPopup {
      * @param {number} col column index
      * @param {number} row row index
      * @returns {object} offset
+     * @private
      */
     _getOffsetByBound(col, row) {
         const x = (col * CELL_WIDTH) + CELL_WIDTH,
@@ -243,6 +249,7 @@ class PopupAddTable extends LayerPopup {
      * Set table size with bound
      * @param {number} col column index
      * @param {number} row row index
+     * @private
      */
     _setTableSizeByBound(col, row) {
         const boundOffset = this._getOffsetByBound(col, row - HEADER_ROW_COUNT);
@@ -257,6 +264,7 @@ class PopupAddTable extends LayerPopup {
      * @param {number} x offset
      * @param {number} y offset
      * @returns {object} bound
+     * @private
      */
     _getSelectionBoundByOffset(x, y) {
         const bound = this._getBoundByOffset(x, y);
@@ -281,6 +289,7 @@ class PopupAddTable extends LayerPopup {
      * Set selection area with bound
      * @param {number} col column index
      * @param {number} row row index
+     * @private
      */
     _setSelectionAreaByBound(col, row) {
         const boundOffset = this._getOffsetByBound(col, row);
@@ -292,6 +301,7 @@ class PopupAddTable extends LayerPopup {
      * Set selected bound
      * @param {number} col column index
      * @param {number} row row index
+     * @private
      */
     _setSelectedBound(col, row) {
         this._selectedBound.col = col;
@@ -302,6 +312,7 @@ class PopupAddTable extends LayerPopup {
      * _getSelectedTableSize
      * Get selected table size
      * @returns {object} bound
+     * @private
      */
     _getSelectedTableSize() {
         return {
@@ -315,6 +326,7 @@ class PopupAddTable extends LayerPopup {
      * Set selected table size text for display
      * @param {number} col column index
      * @param {number} row row index
+     * @private
      */
     _setDisplayText(col, row) {
         this.$desc.html(`${(col + 1)} x ${(row + 1)}`);
@@ -325,6 +337,7 @@ class PopupAddTable extends LayerPopup {
      * Set table element size
      * @param {number} x offset
      * @param {number} y offset
+     * @private
      */
     _setTableSize(x, y) {
         x += LAST_BORDER;
@@ -350,6 +363,7 @@ class PopupAddTable extends LayerPopup {
      * Set selection element size
      * @param {number} x offset
      * @param {number} y offset
+     * @private
      */
     _setSelectionArea(x, y) {
         x += LAST_BORDER;

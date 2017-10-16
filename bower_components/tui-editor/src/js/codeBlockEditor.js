@@ -3,8 +3,7 @@ import CodeMirrorExt from './codeMirrorExt';
 const EVENT_LANGUAGE_CHANGED = 'language-changed';
 
 /**
- * Code Block Editor
- * @class CodeBlockEditor
+ * Class Code Block Editor
  * @extends {CodeMirrorExt}
  */
 class CodeBlockEditor extends CodeMirrorExt {
@@ -14,19 +13,28 @@ class CodeBlockEditor extends CodeMirrorExt {
      * @param {EventManager} eventManager - event manager
      * @memberof CodeBlockEditor
      */
-    constructor(el) {
+    constructor(el, eventManager) {
         super(el, {
             singleCursorHeightPerLine: false,
             theme: 'none'
         });
 
         this._language = '';
+        this._eventManager = eventManager;
 
         this._initEvent();
     }
 
     _initEvent() {
         this.on('cursorActivity', this._onRequireScrollIntoView.bind(this));
+        this.on('beforeChange', (cm, ev) => {
+            if (ev.origin === 'paste') {
+                this._eventManager.emit('pasteBefore', {
+                    source: 'codeblock',
+                    data: ev
+                });
+            }
+        });
     }
 
     _onRequireScrollIntoView() {

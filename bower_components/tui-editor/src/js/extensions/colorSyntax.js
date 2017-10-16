@@ -171,10 +171,10 @@ function initUI(editor, preset) {
         if (popup.isShow()) {
             popup.hide();
         } else {
+            const position = $button.position();
             popup.$el.css({
-                'top': $button.offset().top + $button.height(),
-                'left': $button.offset().left,
-                'position': 'fixed'
+                top: position.top + $button.outerHeight(true),
+                left: position.left
             });
             popup.show();
             colorPicker.slider.toggle(true);
@@ -208,6 +208,7 @@ function initUI(editor, preset) {
  * @param {string} text - Text content
  * @param {string} color - Color value
  * @returns {object} - wrapped text and range(from, to)
+ * @ignore
  */
 function makeCustomColorSyntaxAndTextRange(text, color) {
     return wrapTextAndGetRange(`{color:${color}}`, text, '{color}');
@@ -218,6 +219,7 @@ function makeCustomColorSyntaxAndTextRange(text, color) {
  * @param {string} text Text - content
  * @param {string} color Color - value
  * @returns {object} - wrapped text and range(from, to)
+ * @ignore
  */
 function makeHTMLColorSyntaxAndTextRange(text, color) {
     return wrapTextAndGetRange(`<span style="color:${color}">`, text, '</span>');
@@ -229,6 +231,7 @@ function makeHTMLColorSyntaxAndTextRange(text, color) {
  * @param {string} text - text
  * @param {string} post - text post
  * @returns {object} - wrapped text and range(from, to)
+ * @ignore
  */
 function wrapTextAndGetRange(pre, text, post) {
     return {

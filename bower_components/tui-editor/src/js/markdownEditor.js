@@ -7,8 +7,7 @@ import MdTextObject from './mdTextObject';
 const keyMapper = KeyMapper.getSharedInstance();
 
 /**
- * MarkdownEditor
- * @class MarkdownEditor
+ * Class MarkdownEditor
  */
 class MarkdownEditor extends CodeMirrorExt {
     /**
@@ -24,7 +23,8 @@ class MarkdownEditor extends CodeMirrorExt {
             allowDropFileTypes: ['image'],
             extraKeys: {
                 'Enter': 'newlineAndIndentContinue',
-                'Tab': 'subListIndentTab'
+                'Tab': 'subListIndentTab',
+                'Shift-Tab': 'indentLessOrderedList'
             }
         });
         this.eventManager = eventManager;
@@ -44,7 +44,7 @@ class MarkdownEditor extends CodeMirrorExt {
     /**
      * _initEvent
      * Initialize EventManager event handler
-     * @memberOf MarkdownEditor
+     * @memberof MarkdownEditor
      * @private
      */
     _initEvent() {
@@ -167,9 +167,10 @@ class MarkdownEditor extends CodeMirrorExt {
      * @memberof MarkdownEditor
      * @override
      * @param {string} markdown - Markdown syntax text
+     * @param {boolean} [cursorToEnd=true] - move cursor to contents end
      */
-    setValue(markdown) {
-        super.setValue(markdown);
+    setValue(markdown, cursorToEnd) {
+        super.setValue(markdown, cursorToEnd);
         this._emitMarkdownEditorContentChangedEvent();
     }
 

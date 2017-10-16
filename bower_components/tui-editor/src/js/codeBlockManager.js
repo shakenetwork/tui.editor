@@ -6,9 +6,7 @@
 const {hljs} = window;
 
 /**
- * CodeBlockManager
- * @exports CodeBlockManager
- * @class
+ * Class Code Block Manager
  */
 class CodeBlockManager {
 
@@ -81,7 +79,7 @@ class CodeBlockManager {
         let html;
 
         if (replacer) {
-            html = replacer(codeText);
+            html = replacer(codeText, language);
         } else {
             html = hljs.getLanguage(language) ? hljs.highlight(language, codeText).value : escape(codeText, false);
         }

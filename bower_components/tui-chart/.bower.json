@@ -1,0 +1,38 @@
+{
+  "name": "tui-chart",
+  "authors": [
+    "NHN Ent. FE Development Lab <dl_javascript@nhnent.com>"
+  ],
+  "license": "MIT",
+  "description": "NHN Ent. Toast UI Chart",
+  "ignore": [
+    "maps",
+    "!dist/maps",
+    "samples",
+    "src",
+    "test",
+    "gulpfile.js",
+    "index.html",
+    "jsdoc-conf.json",
+    "karma.conf.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "raphael": "https://github.com/nhnent/raphael.git#2.2.0b",
+    "tui-code-snippet": "1.0.8"
+  },
+  "devDependencies": {
+    "codemirror": "5.24.0"
+  },
+  "homepage": "https://github.com/nhnent/tui.chart",
+  "version": "2.10.0",
+  "_release": "2.10.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.10.0",
+    "commit": "ebc59b8540460b6a5dea97ab076a233a0823d6b4"
+  },
+  "_source": "https://github.com/nhnent/tui.chart.git",
+  "_target": "^2.9.4",
+  "_originalSource": "tui-chart"
+}

@@ -9,13 +9,11 @@ import i18n from '../i18n';
 const {util} = tui;
 
 /**
- * PopupHeading
+ * Class PopupHeading
  * It implements Popup to add headings
- * @class PopupAddHeading
  * @extends {LayerPopup}
  */
 class PopupAddHeading extends LayerPopup {
-
     /**
      * Creates an instance of PopupAddHeading.
      * @param {LayerPopupOption} options - layer popup option
@@ -86,11 +84,10 @@ class PopupAddHeading extends LayerPopup {
             this._eventManager.emit('closeAllPopup');
 
             const $button = this._$button;
-            const position = $button.offset();
+            const position = $button.position();
             this.$el.css({
-                top: position.top + $button.height(),
-                left: position.left,
-                position: 'fixed'
+                top: position.top + $button.outerHeight(true),
+                left: position.left
             });
 
             this.show();

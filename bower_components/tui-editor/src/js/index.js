@@ -4,6 +4,7 @@
  */
 
 // codemirror modes&addons
+require('./codemirror/fixOrderedListNumber');
 require('./codemirror/overlay');
 require('./codemirror/markdown');
 require('./codemirror/gfm');
@@ -17,6 +18,7 @@ require('./extensions/colorSyntax');
 require('./extensions/mark/mark');
 require('./extensions/table/tableExtension');
 require('./extensions/codeBlockPlantUML');
+require('./extensions/codeBlockChart');
 
 import ToastUIEditor from './editor';
 

@@ -25,12 +25,12 @@
     "Makefile",
     "index*"
   ],
-  "version": "8.3.2",
-  "_release": "8.3.2",
+  "version": "8.4.0",
+  "_release": "8.4.0",
   "_resolution": {
     "type": "version",
-    "tag": "8.3.2",
-    "commit": "d0e0cbdc805d63e767665d6aa7b0749c3ab894c5"
+    "tag": "8.4.0",
+    "commit": "3353462142d519dfe5b613e4d9e79fa29601ff98"
   },
   "_source": "https://github.com/markdown-it/markdown-it.git",
   "_target": "^8.3.1",

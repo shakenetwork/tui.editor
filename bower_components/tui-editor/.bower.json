@@ -32,24 +32,23 @@
     "highlightjs": "^9.10.0",
     "jquery": "~2.1.4",
     "markdown-it": "^8.3.1",
-    "toMark": "https://github.com/nhnent/toMark.git#0.0.17",
+    "toMark": "https://github.com/nhnent/toMark.git#0.0.18",
+    "tui-component-colorpicker": "~1.0.2",
     "squire-rte": "kyuwoo-choi/Squire#tui-editor-release",
-    "plantuml-encoder": "^1.2.4"
-  },
-  "devDependencies": {
-    "tui-component-colorpicker": "~1.0.2"
+    "plantuml-encoder": "^1.2.4",
+    "tui-chart": "^2.9.4"
   },
   "resolutions": {
     "jquery": "~2.1.4",
-    "tui-code-snippet": "1.2.1"
+    "tui-code-snippet": "1.2.5"
   },
   "homepage": "https://github.com/nhnent/tui.editor",
-  "version": "0.13.0",
-  "_release": "0.13.0",
+  "version": "0.14.0",
+  "_release": "0.14.0",
   "_resolution": {
     "type": "version",
-    "tag": "0.13.0",
-    "commit": "38a3ce7d796f5955fa771b0b541b5ede1fd1f9d5"
+    "tag": "0.14.0",
+    "commit": "6f33d221270197a2f0ddbcfea771dbdb24d85a10"
   },
   "_source": "https://github.com/nhnent/tui.editor.git",
   "_target": "*",
